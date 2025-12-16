@@ -1,0 +1,666 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Material 3 Base Font Size */
+  --font-size: 14px;
+  
+  /* Material 3 Color Tokens - Light Theme */
+  --md-sys-color-primary: #6750A4;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #EADDFF;
+  --md-sys-color-on-primary-container: #21005D;
+  
+  --md-sys-color-secondary: #625B71;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #E8DEF8;
+  --md-sys-color-on-secondary-container: #1D192B;
+  
+  --md-sys-color-tertiary: #7D5260;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #FFD8E4;
+  --md-sys-color-on-tertiary-container: #31111D;
+  
+  --md-sys-color-surface: #FEF7FF;
+  --md-sys-color-surface-dim: #DED8E1;
+  --md-sys-color-surface-bright: #FEF7FF;
+  --md-sys-color-surface-container-lowest: #FFFFFF;
+  --md-sys-color-surface-container-low: #F7F2FA;
+  --md-sys-color-surface-container: #F3EDF7;
+  --md-sys-color-surface-container-high: #ECE6F0;
+  --md-sys-color-surface-container-highest: #E6E0E9;
+  --md-sys-color-on-surface: #1C1B1F;
+  --md-sys-color-on-surface-variant: #49454F;
+  
+  --md-sys-color-outline: #79747E;
+  --md-sys-color-outline-variant: #CAC4D0;
+  
+  --md-sys-color-error: #B3261E;
+  --md-sys-color-on-error: #FFFFFF;
+  --md-sys-color-error-container: #F9DEDC;
+  --md-sys-color-on-error-container: #410E0B;
+  
+  --md-sys-color-success: #146C2E;
+  --md-sys-color-on-success: #FFFFFF;
+  --md-sys-color-success-container: #A6F5B4;
+  --md-sys-color-on-success-container: #002106;
+  
+  --md-sys-color-warning: #775A00;
+  --md-sys-color-on-warning: #FFFFFF;
+  --md-sys-color-warning-container: #FFDE9C;
+  --md-sys-color-on-warning-container: #251A00;
+  
+  --md-sys-color-info: #0061A4;
+  --md-sys-color-on-info: #FFFFFF;
+  --md-sys-color-info-container: #CFE5FF;
+  --md-sys-color-on-info-container: #001D36;
+  
+  /* Material 3 Elevation */
+  --md-sys-elevation-level0: none;
+  --md-sys-elevation-level1: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+  --md-sys-elevation-level2: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+  --md-sys-elevation-level3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px 0px rgba(0, 0, 0, 0.3);
+  --md-sys-elevation-level4: 0px 6px 10px 4px rgba(0, 0, 0, 0.15), 0px 2px 3px 0px rgba(0, 0, 0, 0.3);
+  --md-sys-elevation-level5: 0px 8px 12px 6px rgba(0, 0, 0, 0.15), 0px 4px 4px 0px rgba(0, 0, 0, 0.3);
+  
+  /* Material 3 Corner Radius - Updated to use 8px as default */
+  --md-sys-corner-none: 0px;
+  --md-sys-corner-extra-small: 4px;
+  --md-sys-corner-small: 8px;
+  --md-sys-corner-medium: 8px; /* Changed from 12px to 8px */
+  --md-sys-corner-large: 16px;
+  --md-sys-corner-extra-large: 24px;
+  --md-sys-corner-extra-large-top: 24px 24px 0px 0px;
+  
+  /* Legacy variables for compatibility */
+  --background: var(--md-sys-color-surface);
+  --foreground: var(--md-sys-color-on-surface);
+  --card: var(--md-sys-color-surface-container);
+  --card-foreground: var(--md-sys-color-on-surface);
+  --popover: var(--md-sys-color-surface-container);
+  --popover-foreground: var(--md-sys-color-on-surface);
+  --primary: var(--md-sys-color-primary);
+  --primary-foreground: var(--md-sys-color-on-primary);
+  --secondary: var(--md-sys-color-secondary-container);
+  --secondary-foreground: var(--md-sys-color-on-secondary-container);
+  --muted: var(--md-sys-color-surface-container-high);
+  --muted-foreground: var(--md-sys-color-on-surface-variant);
+  --accent: var(--md-sys-color-secondary-container);
+  --accent-foreground: var(--md-sys-color-on-secondary-container);
+  --destructive: var(--md-sys-color-error);
+  --destructive-foreground: var(--md-sys-color-on-error);
+  --border: var(--md-sys-color-outline-variant);
+  --input: var(--md-sys-color-surface);
+  --input-background: var(--md-sys-color-surface-container);
+  --ring: var(--md-sys-color-primary);
+  --radius: var(--md-sys-corner-small); /* Changed to use 8px consistently */
+}
+
+.dark {
+  /* Material 3 Color Tokens - Dark Theme */
+  --md-sys-color-primary: #D0BCFF;
+  --md-sys-color-on-primary: #381E72;
+  --md-sys-color-primary-container: #4F378B;
+  --md-sys-color-on-primary-container: #EADDFF;
+  
+  --md-sys-color-secondary: #CCC2DC;
+  --md-sys-color-on-secondary: #332D41;
+  --md-sys-color-secondary-container: #4A4458;
+  --md-sys-color-on-secondary-container: #E8DEF8;
+  
+  --md-sys-color-tertiary: #EFB8C8;
+  --md-sys-color-on-tertiary: #492532;
+  --md-sys-color-tertiary-container: #633B48;
+  --md-sys-color-on-tertiary-container: #FFD8E4;
+  
+  --md-sys-color-surface: #10090D;
+  --md-sys-color-surface-dim: #10090D;
+  --md-sys-color-surface-bright: #423F42;
+  --md-sys-color-surface-container-lowest: #0B0F0D;
+  --md-sys-color-surface-container-low: #1D1B16;
+  --md-sys-color-surface-container: #211F1A;
+  --md-sys-color-surface-container-high: #2B2925;
+  --md-sys-color-surface-container-highest: #36342F;
+  --md-sys-color-on-surface: #E6E1E5;
+  --md-sys-color-on-surface-variant: #CAC4D0;
+  
+  --md-sys-color-outline: #938F99;
+  --md-sys-color-outline-variant: #49454F;
+  
+  --md-sys-color-error: #F2B8B5;
+  --md-sys-color-on-error: #601410;
+  --md-sys-color-error-container: #8C1D18;
+  --md-sys-color-on-error-container: #F9DEDC;
+  
+  --md-sys-color-success: #8AD896;
+  --md-sys-color-on-success: #003910;
+  --md-sys-color-success-container: #00531D;
+  --md-sys-color-on-success-container: #A6F5B4;
+  
+  --md-sys-color-warning: #E1C54D;
+  --md-sys-color-on-warning: #3E2F00;
+  --md-sys-color-warning-container: #5A4300;
+  --md-sys-color-on-warning-container: #FFDE9C;
+  
+  --md-sys-color-info: #9ECAFF;
+  --md-sys-color-on-info: #003258;
+  --md-sys-color-info-container: #00497D;
+  --md-sys-color-on-info-container: #CFE5FF;
+  
+  /* Update legacy variables */
+  --background: var(--md-sys-color-surface);
+  --foreground: var(--md-sys-color-on-surface);
+  --card: var(--md-sys-color-surface-container);
+  --card-foreground: var(--md-sys-color-on-surface);
+  --popover: var(--md-sys-color-surface-container);
+  --popover-foreground: var(--md-sys-color-on-surface);
+  --primary: var(--md-sys-color-primary);
+  --primary-foreground: var(--md-sys-color-on-primary);
+  --secondary: var(--md-sys-color-secondary-container);
+  --secondary-foreground: var(--md-sys-color-on-secondary-container);
+  --muted: var(--md-sys-color-surface-container-high);
+  --muted-foreground: var(--md-sys-color-on-surface-variant);
+  --accent: var(--md-sys-color-secondary-container);
+  --accent-foreground: var(--md-sys-color-on-secondary-container);
+  --destructive: var(--md-sys-color-error);
+  --destructive-foreground: var(--md-sys-color-on-error);
+  --border: var(--md-sys-color-outline-variant);
+  --input: var(--md-sys-color-surface);
+  --input-background: var(--md-sys-color-surface-container);
+  --ring: var(--md-sys-color-primary);
+}
+
+@theme inline {
+  /* Material 3 Color System - Properly defined for Tailwind */
+  --color-md-primary: var(--md-sys-color-primary);
+  --color-md-on-primary: var(--md-sys-color-on-primary);
+  --color-md-primary-container: var(--md-sys-color-primary-container);
+  --color-md-on-primary-container: var(--md-sys-color-on-primary-container);
+  
+  --color-md-secondary: var(--md-sys-color-secondary);
+  --color-md-on-secondary: var(--md-sys-color-on-secondary);
+  --color-md-secondary-container: var(--md-sys-color-secondary-container);
+  --color-md-on-secondary-container: var(--md-sys-color-on-secondary-container);
+  
+  --color-md-tertiary: var(--md-sys-color-tertiary);
+  --color-md-on-tertiary: var(--md-sys-color-on-tertiary);
+  --color-md-tertiary-container: var(--md-sys-color-tertiary-container);
+  --color-md-on-tertiary-container: var(--md-sys-color-on-tertiary-container);
+  
+  --color-md-surface: var(--md-sys-color-surface);
+  --color-md-surface-dim: var(--md-sys-color-surface-dim);
+  --color-md-surface-bright: var(--md-sys-color-surface-bright);
+  --color-md-surface-container-lowest: var(--md-sys-color-surface-container-lowest);
+  --color-md-surface-container-low: var(--md-sys-color-surface-container-low);
+  --color-md-surface-container: var(--md-sys-color-surface-container);
+  --color-md-surface-container-high: var(--md-sys-color-surface-container-high);
+  --color-md-surface-container-highest: var(--md-sys-color-surface-container-highest);
+  --color-md-on-surface: var(--md-sys-color-on-surface);
+  --color-md-on-surface-variant: var(--md-sys-color-on-surface-variant);
+  
+  --color-md-outline: var(--md-sys-color-outline);
+  --color-md-outline-variant: var(--md-sys-color-outline-variant);
+  
+  --color-md-error: var(--md-sys-color-error);
+  --color-md-on-error: var(--md-sys-color-on-error);
+  --color-md-error-container: var(--md-sys-color-error-container);
+  --color-md-on-error-container: var(--md-sys-color-on-error-container);
+  
+  --color-md-success: var(--md-sys-color-success);
+  --color-md-on-success: var(--md-sys-color-on-success);
+  --color-md-success-container: var(--md-sys-color-success-container);
+  --color-md-on-success-container: var(--md-sys-color-on-success-container);
+  
+  --color-md-warning: var(--md-sys-color-warning);
+  --color-md-on-warning: var(--md-sys-color-on-warning);
+  --color-md-warning-container: var(--md-sys-color-warning-container);
+  --color-md-on-warning-container: var(--md-sys-color-on-warning-container);
+  
+  --color-md-info: var(--md-sys-color-info);
+  --color-md-on-info: var(--md-sys-color-on-info);
+  --color-md-info-container: var(--md-sys-color-info-container);
+  --color-md-on-info-container: var(--md-sys-color-on-info-container);
+  
+  /* Legacy color system for compatibility */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  
+  /* Material 3 Shadow System - Define as Tailwind shadow utilities */
+  --shadow-md-elevation-0: var(--md-sys-elevation-level0);
+  --shadow-md-elevation-1: var(--md-sys-elevation-level1);
+  --shadow-md-elevation-2: var(--md-sys-elevation-level2);
+  --shadow-md-elevation-3: var(--md-sys-elevation-level3);
+  --shadow-md-elevation-4: var(--md-sys-elevation-level4);
+  --shadow-md-elevation-5: var(--md-sys-elevation-level5);
+  
+  /* Material 3 Corner Radius */
+  --radius-none: var(--md-sys-corner-none);
+  --radius-xs: var(--md-sys-corner-extra-small);
+  --radius-sm: var(--md-sys-corner-small);
+  --radius-md: var(--md-sys-corner-medium);
+  --radius-lg: var(--md-sys-corner-large);
+  --radius-xl: var(--md-sys-corner-extra-large);
+  
+  /* Legacy radius - Updated to 8px */
+  --radius: var(--md-sys-corner-small);
+  
+  /* Material 3 Typography - Define as font size utilities */
+  --font-size-display-large: var(--md-sys-typescale-display-large-size);
+  --font-size-display-medium: var(--md-sys-typescale-display-medium-size);
+  --font-size-display-small: var(--md-sys-typescale-display-small-size);
+  --font-size-headline-large: var(--md-sys-typescale-headline-large-size);
+  --font-size-headline-medium: var(--md-sys-typescale-headline-medium-size);
+  --font-size-headline-small: var(--md-sys-typescale-headline-small-size);
+  --font-size-title-large: var(--md-sys-typescale-title-large-size);
+  --font-size-title-medium: var(--md-sys-typescale-title-medium-size);
+  --font-size-title-small: var(--md-sys-typescale-title-small-size);
+  --font-size-body-large: var(--md-sys-typescale-body-large-size);
+  --font-size-body-medium: var(--md-sys-typescale-body-medium-size);
+  --font-size-body-small: var(--md-sys-typescale-body-small-size);
+  --font-size-label-large: var(--md-sys-typescale-label-large-size);
+  --font-size-label-medium: var(--md-sys-typescale-label-medium-size);
+  --font-size-label-small: var(--md-sys-typescale-label-small-size);
+  
+  /* Material 3 Line Heights */
+  --line-height-display-large: var(--md-sys-typescale-display-large-line-height);
+  --line-height-display-medium: var(--md-sys-typescale-display-medium-line-height);
+  --line-height-display-small: var(--md-sys-typescale-display-small-line-height);
+  --line-height-headline-large: var(--md-sys-typescale-headline-large-line-height);
+  --line-height-headline-medium: var(--md-sys-typescale-headline-medium-line-height);
+  --line-height-headline-small: var(--md-sys-typescale-headline-small-line-height);
+  --line-height-title-large: var(--md-sys-typescale-title-large-line-height);
+  --line-height-title-medium: var(--md-sys-typescale-title-medium-line-height);
+  --line-height-title-small: var(--md-sys-typescale-title-small-line-height);
+  --line-height-body-large: var(--md-sys-typescale-body-large-line-height);
+  --line-height-body-medium: var(--md-sys-typescale-body-medium-line-height);
+  --line-height-body-small: var(--md-sys-typescale-body-small-line-height);
+  --line-height-label-large: var(--md-sys-typescale-label-large-line-height);
+  --line-height-label-medium: var(--md-sys-typescale-label-medium-line-height);
+  --line-height-label-small: var(--md-sys-typescale-label-small-line-height);
+}
+
+@layer base {
+  * {
+    @apply border-md-outline-variant;
+  }
+
+  body {
+    @apply bg-md-surface text-md-on-surface;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+}
+
+/* Material 3 Component Styles */
+@layer components {
+  .md-filled-card {
+    @apply bg-md-surface-container-highest text-md-on-surface rounded-lg shadow-md-elevation-1;
+  }
+  
+  .md-outlined-card {
+    @apply bg-md-surface text-md-on-surface border border-md-outline-variant rounded-lg shadow-none;
+  }
+  
+  .md-filled-button {
+    @apply bg-md-primary text-md-on-primary rounded-lg px-6 py-2 shadow-none hover:shadow-md-elevation-1 transition-shadow duration-200;
+  }
+  
+  .md-outlined-button {
+    @apply bg-transparent text-md-primary border border-md-outline rounded-lg px-6 py-2 hover:bg-md-primary/8 transition-colors duration-200;
+  }
+  
+  .md-text-button {
+    @apply bg-transparent text-md-primary rounded-lg px-4 py-2 hover:bg-md-primary/8 transition-colors duration-200;
+  }
+  
+  .md-filled-text-field {
+    @apply bg-md-surface-container-highest text-md-on-surface border-0 border-b-2 border-md-on-surface-variant rounded-t-lg px-4 py-3 focus:border-md-primary outline-none transition-colors duration-200;
+  }
+  
+  .md-outlined-text-field {
+    @apply bg-md-surface text-md-on-surface border border-md-outline rounded-lg px-4 py-3 focus:border-md-primary focus:border-2 outline-none transition-colors duration-200;
+  }
+  
+  /* Material 3 Typography Component Classes */
+  .md-typescale-display-large {
+    font-size: var(--font-size-display-large);
+    line-height: var(--line-height-display-large);
+    @apply font-normal;
+  }
+  
+  .md-typescale-display-medium {
+    font-size: var(--font-size-display-medium);
+    line-height: var(--line-height-display-medium);
+    @apply font-normal;
+  }
+  
+  .md-typescale-display-small {
+    font-size: var(--font-size-display-small);
+    line-height: var(--line-height-display-small);
+    @apply font-normal;
+  }
+  
+  .md-typescale-headline-large {
+    font-size: var(--font-size-headline-large);
+    line-height: var(--line-height-headline-large);
+    @apply font-normal;
+  }
+  
+  .md-typescale-headline-medium {
+    font-size: var(--font-size-headline-medium);
+    line-height: var(--line-height-headline-medium);
+    @apply font-normal;
+  }
+  
+  .md-typescale-headline-small {
+    font-size: var(--font-size-headline-small);
+    line-height: var(--line-height-headline-small);
+    @apply font-normal;
+  }
+  
+  .md-typescale-title-large {
+    font-size: var(--font-size-title-large);
+    line-height: var(--line-height-title-large);
+    @apply font-normal;
+  }
+  
+  .md-typescale-title-medium {
+    font-size: var(--font-size-title-medium);
+    line-height: var(--line-height-title-medium);
+    @apply font-medium;
+  }
+  
+  .md-typescale-title-small {
+    font-size: var(--font-size-title-small);
+    line-height: var(--line-height-title-small);
+    @apply font-medium;
+  }
+  
+  .md-typescale-body-large {
+    font-size: var(--font-size-body-large);
+    line-height: var(--line-height-body-large);
+    @apply font-normal;
+  }
+  
+  .md-typescale-body-medium {
+    font-size: var(--font-size-body-medium);
+    line-height: var(--line-height-body-medium);
+    @apply font-normal;
+  }
+  
+  .md-typescale-body-small {
+    font-size: var(--font-size-body-small);
+    line-height: var(--line-height-body-small);
+    @apply font-normal;
+  }
+  
+  .md-typescale-label-large {
+    font-size: var(--font-size-label-large);
+    line-height: var(--line-height-label-large);
+    @apply font-medium;
+  }
+  
+  .md-typescale-label-medium {
+    font-size: var(--font-size-label-medium);
+    line-height: var(--line-height-label-medium);
+    @apply font-medium;
+  }
+  
+  .md-typescale-label-small {
+    font-size: var(--font-size-label-small);
+    line-height: var(--line-height-label-small);
+    @apply font-medium;
+  }
+
+  /* Discrete Scrollbar Styles */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-thumb-md-primary {
+    scrollbar-color: var(--md-sys-color-primary) transparent;
+  }
+
+  .scrollbar-track-transparent {
+    scrollbar-color: transparent transparent;
+  }
+
+  /* WebKit Scrollbar Styles for better cross-browser support */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thumb-md-primary::-webkit-scrollbar-thumb {
+    background-color: var(--md-sys-color-primary);
+    border-radius: 3px;
+    border: none;
+  }
+
+  .scrollbar-thumb-md-primary::-webkit-scrollbar-thumb:hover {
+    background-color: var(--md-sys-color-primary-container);
+  }
+
+  /* Optimized Animation Classes - Smooth and performant */
+  @keyframes slide-in-from-left {
+    from {
+      opacity: 0.3;
+      transform: translateX(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slide-in-from-right {
+    from {
+      opacity: 0.3;
+      transform: translateX(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slide-in-from-top {
+    from {
+      opacity: 0.3;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-in-from-top-2 {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-in-from-top-4 {
+    from {
+      opacity: 0;
+      transform: translateY(-16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-in-from-bottom-4 {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in-0 {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-in {
+    animation-duration: 200ms;
+    animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation-fill-mode: both;
+    /* Enable hardware acceleration for smoother animations */
+    will-change: transform, opacity;
+  }
+
+  .slide-in-from-left {
+    animation-name: slide-in-from-left;
+  }
+
+  .slide-in-from-right {
+    animation-name: slide-in-from-right;
+  }
+
+  .slide-in-from-top {
+    animation-name: slide-in-from-top;
+  }
+
+  .slide-in-from-top-2 {
+    animation-name: slide-in-from-top-2;
+  }
+
+  .slide-in-from-top-4 {
+    animation-name: slide-in-from-top-4;
+  }
+
+  .slide-in-from-bottom-4 {
+    animation-name: slide-in-from-bottom-4;
+  }
+
+  .fade-in-0 {
+    animation-name: fade-in-0;
+  }
+
+  .duration-150 {
+    animation-duration: 150ms;
+  }
+
+  .duration-200 {
+    animation-duration: 200ms;
+  }
+
+  .duration-300 {
+    animation-duration: 300ms;
+  }
+
+  /* Smooth easing functions */
+  .ease-out {
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+
+  .ease-in-out {
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/**
+ * Base typography with Material 3 type scale
+ */
+@layer base {
+  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+    h1 {
+      font-size: var(--font-size-headline-large);
+      line-height: var(--line-height-headline-large);
+      @apply font-normal;
+    }
+
+    h2 {
+      font-size: var(--font-size-headline-medium);
+      line-height: var(--line-height-headline-medium);
+      @apply font-normal;
+    }
+
+    h3 {
+      font-size: var(--font-size-headline-small);
+      line-height: var(--line-height-headline-small);
+      @apply font-normal;
+    }
+
+    h4 {
+      font-size: var(--font-size-title-large);
+      line-height: var(--line-height-title-large);
+      @apply font-normal;
+    }
+
+    h5 {
+      font-size: var(--font-size-title-medium);
+      line-height: var(--line-height-title-medium);
+      @apply font-medium;
+    }
+
+    h6 {
+      font-size: var(--font-size-title-small);
+      line-height: var(--line-height-title-small);
+      @apply font-medium;
+    }
+
+    p {
+      font-size: var(--font-size-body-medium);
+      line-height: var(--line-height-body-medium);
+      @apply font-normal;
+    }
+
+    label {
+      font-size: var(--font-size-label-large);
+      line-height: var(--line-height-label-large);
+      @apply font-medium;
+    }
+
+    button {
+      font-size: var(--font-size-label-large);
+      line-height: var(--line-height-label-large);
+      @apply font-medium;
+    }
+
+    input {
+      font-size: var(--font-size-body-large);
+      line-height: var(--line-height-body-large);
+      @apply font-normal;
+    }
+  }
+}
+
+html {
+  font-size: var(--font-size);
+}
