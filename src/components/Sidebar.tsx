@@ -23,6 +23,7 @@ import {
     Activity,
 } from 'lucide-react';
 import type { OnboardingStatus } from '../types';
+import { APP_VERSION, APP_NAME } from '../constants/version';
 
 // Chart types for Analytics tab
 type ChartType = 'bar' | 'line' | 'area' | 'velocity' | 'conversion' | 'sankey';
@@ -435,6 +436,18 @@ export function Sidebar({
                             </div>
                         )}
                     </div>
+                </div>
+            </div>
+
+            {/* Footer with Version */}
+            <div className="p-4 border-t border-md-outline-variant/30 mt-auto">
+                <div className="text-center">
+                    <p className="text-xs text-md-on-surface-variant">
+                        {APP_NAME}
+                    </p>
+                    <p className="text-xs font-medium text-md-primary mt-1">
+                        v{APP_VERSION}
+                    </p>
                 </div>
             </div>
         </div>
