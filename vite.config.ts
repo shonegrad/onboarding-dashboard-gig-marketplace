@@ -53,6 +53,21 @@ export default defineConfig({
   build: {
     target: 'esnext',
     outDir: 'build',
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React core - cached across updates
+          'react-vendor': ['react', 'react-dom'],
+          // Icons - moderate size, used throughout
+          'icons': ['lucide-react'],
+          // UI utilities
+          'ui-utils': ['clsx', 'tailwind-merge', 'class-variance-authority'],
+          // D3 for charts
+          'd3-charts': ['d3'],
+        },
+      },
+    },
   },
   server: {
     port: 3000,
