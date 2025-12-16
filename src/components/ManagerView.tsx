@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Suspense, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -42,15 +42,17 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getStatusColor, getAvatarSrc, TOAST_MESSAGES, splitStatusForBadge } from '../utils/stageUtils';
-import { GeoMapView } from './GeoMapView';
-import { SankeyChart } from './SankeyChart';
-import { D3BarChart } from './charts/D3BarChart';
-import { D3Histogram } from './charts/D3Histogram';
-import { D3WorkforceChart } from './charts/D3WorkforceChart';
-import { D3PipelineChart } from './charts/D3PipelineChart';
-import { D3ConversionChart } from './charts/D3ConversionChart';
 import { Sidebar } from './Sidebar';
 import type { Applicant, OnboardingStatus } from '../types';
+
+// Lazy load heavy chart components
+const GeoMapView = React.lazy(() => import('./GeoMapView').then(m => ({ default: m.GeoMapView })));
+const SankeyChart = React.lazy(() => import('./SankeyChart').then(m => ({ default: m.SankeyChart })));
+const D3BarChart = React.lazy(() => import('./charts/D3BarChart').then(m => ({ default: m.D3BarChart })));
+const D3Histogram = React.lazy(() => import('./charts/D3Histogram').then(m => ({ default: m.D3Histogram })));
+const D3WorkforceChart = React.lazy(() => import('./charts/D3WorkforceChart').then(m => ({ default: m.D3WorkforceChart })));
+const D3PipelineChart = React.lazy(() => import('./charts/D3PipelineChart').then(m => ({ default: m.D3PipelineChart })));
+const D3ConversionChart = React.lazy(() => import('./charts/D3ConversionChart').then(m => ({ default: m.D3ConversionChart })));
 
 interface ManagerViewProps {
   applicants: Applicant[];
@@ -94,15 +96,17 @@ export function ManagerView({ applicants, selectedApplicant, onApplicantSelect, 
   const [selectedMetric, setSelectedMetric] = useState<any>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Toggle card expansion
-  const toggleCardExpansion = (applicantId: string) => {
-    const newExpanded = new Set(expandedCards);
-    if (newExpanded.has(applicantId)) {
-      newExpanded.delete(applicantId);
-    } else {
-      newExpanded.add(applicantId);
-    }
-    setExpandedCards(newExpanded);
+  // Toggle card expansion - memoized to prevent re-renders
+  const toggleCardExpansion = useCallback((applicantId: string) => {
+    setExpandedCards(prev => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(applicantId)) {
+        newExpanded.delete(applicantId);
+      } else {
+        newExpanded.add(applicantId);
+      }
+      return newExpanded;
+    });
 
     // Set as selected when expanding
     const applicant = applicants.find(app => app.id === applicantId);
@@ -112,7 +116,7 @@ export function ManagerView({ applicants, selectedApplicant, onApplicantSelect, 
         setNotes(prev => ({ ...prev, [applicantId]: applicant.notes || '' }));
       }
     }
-  };
+  }, [applicants, onApplicantSelect, notes]);
 
   // Generate feed events
   const generateFeedEvents = (): FeedEvent[] => {
@@ -502,58 +506,77 @@ export function ManagerView({ applicants, selectedApplicant, onApplicantSelect, 
     return filtered;
   }, [applicants, searchTerm, statusFilter, jobTitleFilter, locationFilter, sortBy]);
 
+  // Chart loading skeleton
+  const ChartSkeleton = () => (
+    <div className="w-full h-[300px] flex items-center justify-center bg-md-surface-container rounded-lg animate-pulse">
+      <div className="text-md-on-surface-variant">Loading chart...</div>
+    </div>
+  );
+
   // Enhanced render chart function with more comprehensive data
   const renderChart = () => {
     switch (chartType) {
       case 'bar':
         return (
           <div className="w-full h-[300px]">
-            <D3BarChart data={stageData} onBarClick={handleBarClick} />
+            <Suspense fallback={<ChartSkeleton />}>
+              <D3BarChart data={stageData} onBarClick={handleBarClick} />
+            </Suspense>
           </div>
         );
       case 'sankey':
         return (
           <div className="w-full h-[300px] flex items-center justify-center">
-            <SankeyChart applicants={applicants} width={800} height={300} />
+            <Suspense fallback={<ChartSkeleton />}>
+              <SankeyChart applicants={applicants} width={800} height={300} />
+            </Suspense>
           </div>
         );
       case 'line':
         return (
           <div className="w-full h-[300px]">
-            <D3WorkforceChart data={trendData} />
+            <Suspense fallback={<ChartSkeleton />}>
+              <D3WorkforceChart data={trendData} />
+            </Suspense>
           </div>
         );
       case 'velocity':
         return (
           <div className="w-full h-[300px]">
-            <D3Histogram data={velocityData} />
+            <Suspense fallback={<ChartSkeleton />}>
+              <D3Histogram data={velocityData} />
+            </Suspense>
           </div>
         );
       case 'conversion':
         return (
           <div className="w-full h-[300px]">
-            <D3ConversionChart
-              data={conversionData}
-              colors={{
-                applied: getStatusColor('Applied'),
-                rate: getStatusColor('Go Live')
-              }}
-            />
+            <Suspense fallback={<ChartSkeleton />}>
+              <D3ConversionChart
+                data={conversionData}
+                colors={{
+                  applied: getStatusColor('Applied'),
+                  rate: getStatusColor('Go Live')
+                }}
+              />
+            </Suspense>
           </div>
         );
       case 'area':
         return (
           <div className="w-full h-[300px]">
-            <D3PipelineChart
-              data={trendData}
-              colors={{
-                applications: getStatusColor('Applied'),
-                screenings: getStatusColor('Under Review'),
-                interviews: getStatusColor('Interview Scheduled'),
-                trainingCompletions: getStatusColor('In Training'),
-                newHires: getStatusColor('Go Live')
-              }}
-            />
+            <Suspense fallback={<ChartSkeleton />}>
+              <D3PipelineChart
+                data={trendData}
+                colors={{
+                  applications: getStatusColor('Applied'),
+                  screenings: getStatusColor('Under Review'),
+                  interviews: getStatusColor('Interview Scheduled'),
+                  trainingCompletions: getStatusColor('In Training'),
+                  newHires: getStatusColor('Go Live')
+                }}
+              />
+            </Suspense>
           </div>
         );
       default:
