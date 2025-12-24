@@ -4,8 +4,8 @@ import { CssBaseline, Box } from '@mui/material';
 import { theme } from './theme/theme';
 import { AppShell } from './components/layout/AppShell';
 import { ApplicantsPage } from './features/applicants/ApplicantsPage';
-import { AnalyticsPlaceholderPage } from './features/analytics/AnalyticsPlaceholderPage';
-import { MapPlaceholderPage } from './features/map/MapPlaceholderPage';
+import { AnalyticsDashboard } from './features/analytics/AnalyticsDashboard';
+import { MapOverviewPage } from './features/map/MapOverviewPage';
 import { ActivityFeedPlaceholderPage } from './features/feed/ActivityFeedPlaceholderPage';
 import { generateMockApplicants } from './data/mockData';
 import { Applicant, OnboardingStatus } from './types';
@@ -63,9 +63,9 @@ export default function App() {
           />
         );
       case 'analytics':
-        return <AnalyticsPlaceholderPage />;
+        return <AnalyticsDashboard applicants={applicants} />;
       case 'map':
-        return <MapPlaceholderPage />;
+        return <MapOverviewPage applicants={applicants} />;
       case 'feed':
         return <ActivityFeedPlaceholderPage />;
       default:

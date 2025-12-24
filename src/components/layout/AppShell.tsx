@@ -24,7 +24,7 @@ export function AppShell({ children, activeTab, onTabChange, toggleTheme, isDark
     };
 
     return (
-        <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+        <Box sx={{ display: 'flex', height: '100vh' }}>
             <CssBaseline />
             <AppBar
                 position="fixed"
@@ -68,13 +68,10 @@ export function AppShell({ children, activeTab, onTabChange, toggleTheme, isDark
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    p: 3,
                     width: { sm: `calc(100% - ${drawerWidth}px)` },
                     mt: 8, // Toolbar height approx
-                    height: '100%',
-                    overflow: 'hidden', // Let children handle scroll
-                    display: 'flex',
-                    flexDirection: 'column',
+                    height: 'calc(100vh - 64px)', // Subtract AppBar height
+                    overflow: 'auto',
                 }}
             >
                 {children}
