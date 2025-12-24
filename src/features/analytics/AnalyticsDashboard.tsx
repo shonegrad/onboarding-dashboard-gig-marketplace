@@ -116,20 +116,28 @@ export const AnalyticsDashboard = ({ applicants: propApplicants }: AnalyticsDash
             {/* Row 1: Map and Pipeline Health */}
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3 }}>
                 <Box sx={{ flex: '2 1 500px', minWidth: 0 }}>
-                    <GeographicMap data={mapData} />
+                    <GeographicMap
+                        data={mapData}
+                        selectedCountry={selectedCountry}
+                        onCountryClick={handleCountryClick}
+                    />
                 </Box>
                 <Box sx={{ flex: '1 1 350px', minWidth: 300 }}>
                     <PipelineHealth applicants={applicants} onStageClick={handleStageClick} />
                 </Box>
             </Box>
 
-            {/* Row 2: Trend, Funnel, Regional */}
+            {/* Row 2: Trend, Funnel */}
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3 }}>
                 <Box sx={{ flex: '2 1 400px', minWidth: 0 }}>
                     <ApplicationTrendChart data={trendData} />
                 </Box>
                 <Box sx={{ flex: '1 1 280px', minWidth: 280 }}>
-                    <RecruitmentFunnel data={funnelCounts} />
+                    <RecruitmentFunnel
+                        data={funnelCounts}
+                        onStageClick={handleStageClick}
+                        selectedStage={selectedStage}
+                    />
                 </Box>
             </Box>
 
