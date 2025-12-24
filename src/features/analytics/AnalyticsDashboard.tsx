@@ -14,6 +14,9 @@ import { TimeToHireChart } from './TimeToHireChart';
 import { ExperienceBreakdown } from './ExperienceBreakdown';
 import { RatingDistribution } from './RatingDistribution';
 import { RecentActivity } from './RecentActivity';
+import { ApplicationSource } from './ApplicationSource';
+import { WeeklyComparison } from './WeeklyComparison';
+import { SkillsCertifications } from './SkillsCertifications';
 import { Applicant } from '../../types';
 
 interface AnalyticsDashboardProps {
@@ -247,6 +250,19 @@ export const AnalyticsDashboard = ({ applicants: propApplicants }: AnalyticsDash
                             ))}
                         </Box>
                     </Paper>
+                </Box>
+            </Box>
+
+            {/* Row 5: Application Source, Weekly Comparison, Skills */}
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mt: 3 }}>
+                <Box sx={{ flex: '1 1 280px', minWidth: 280 }}>
+                    <ApplicationSource applicants={applicants} />
+                </Box>
+                <Box sx={{ flex: '1 1 280px', minWidth: 280 }}>
+                    <WeeklyComparison applicants={applicants} />
+                </Box>
+                <Box sx={{ flex: '1 1 350px', minWidth: 350 }}>
+                    <SkillsCertifications applicants={applicants} />
                 </Box>
             </Box>
         </Box>
