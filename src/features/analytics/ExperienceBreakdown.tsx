@@ -1,7 +1,7 @@
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { useTheme } from '@mui/material/styles';
-import { Box, Typography, Paper } from '@mui/material';
+import { Box, Typography, Paper, Fade } from '@mui/material';
 import { School } from '@mui/icons-material';
 import { Applicant } from '../../types';
 
@@ -19,9 +19,9 @@ interface ExperienceCategory {
 export const ExperienceBreakdown = ({ applicants }: ExperienceBreakdownProps) => {
     const svgRef = useRef<SVGSVGElement>(null);
     const theme = useTheme();
+    const [hovered, setHovered] = useState<{ name: string; count: number; percentage: number } | null>(null);
 
     const experienceData = useMemo((): ExperienceCategory[] => {
-        // Categorize experience levels
         const categories = {
             'No Experience': 0,
             '< 1 Year': 0,
@@ -49,9 +49,9 @@ export const ExperienceBreakdown = ({ applicants }: ExperienceBreakdownProps) =>
 
         const total = applicants.length || 1;
         const colors = [
-            theme.palette.error.light,
-            theme.palette.warning.light,
-            theme.palette.info.light,
+            theme.palette.error.main,
+            theme.palette.warning.main,
+            theme.palette.info.main,
             theme.palette.success.light,
             theme.palette.success.main,
         ];
@@ -69,10 +69,10 @@ export const ExperienceBreakdown = ({ applicants }: ExperienceBreakdownProps) =>
 
         d3.select(svgRef.current).selectAll("*").remove();
 
-        const width = 120;
-        const height = 120;
+        const width = 140;
+        const height = 140;
         const radius = Math.min(width, height) / 2;
-        const innerRadius = radius * 0.6;
+        const innerRadius = radius * 0.58;
 
         const svg = d3.select(svgRef.current)
             .attr("width", width)
@@ -82,13 +82,18 @@ export const ExperienceBreakdown = ({ applicants }: ExperienceBreakdownProps) =>
 
         const pie = d3.pie<ExperienceCategory>()
             .value(d => d.count)
-            .sort(null);
+            .sort(null)
+            .padAngle(0.03);
 
         const arc = d3.arc<d3.PieArcDatum<ExperienceCategory>>()
             .innerRadius(innerRadius)
             .outerRadius(radius)
-            .cornerRadius(3)
-            .padAngle(0.02);
+            .cornerRadius(4);
+
+        const hoverArc = d3.arc<d3.PieArcDatum<ExperienceCategory>>()
+            .innerRadius(innerRadius)
+            .outerRadius(radius + 6)
+            .cornerRadius(4);
 
         const arcs = svg.selectAll(".arc")
             .data(pie(experienceData))
@@ -100,37 +105,67 @@ export const ExperienceBreakdown = ({ applicants }: ExperienceBreakdownProps) =>
             .attr("d", arc)
             .attr("fill", d => d.data.color)
             .style("cursor", "pointer")
-            .on("mouseover", function () {
-                d3.select(this)
-                    .transition()
-                    .duration(200)
-                    .attr("transform", function (d) {
-                        const [x, y] = arc.centroid(d as any);
-                        return `translate(${x * 0.05},${y * 0.05})`;
-                    });
+            .style("filter", "drop-shadow(0 2px 4px rgba(0,0,0,0.15))")
+            .attr("opacity", 0)
+            .transition()
+            .duration(600)
+            .delay((_, i) => i * 100)
+            .attrTween("d", function (d) {
+                const interpolate = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
+                return (t) => arc(interpolate(t)) || "";
             })
-            .on("mouseout", function () {
+            .attr("opacity", 1);
+
+        // Re-select for event handlers after animation
+        svg.selectAll(".arc path")
+            .on("mouseenter", function (event, d: any) {
                 d3.select(this)
                     .transition()
                     .duration(200)
-                    .attr("transform", "translate(0,0)");
+                    .attr("d", hoverArc(d));
+                setHovered({ name: d.data.name, count: d.data.count, percentage: d.data.percentage });
+            })
+            .on("mouseleave", function (event, d: any) {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("d", arc(d));
+                setHovered(null);
             });
 
+        // Center circle background
+        svg.append("circle")
+            .attr("r", innerRadius - 4)
+            .attr("fill", theme.palette.background.paper)
+            .attr("opacity", 0)
+            .transition()
+            .delay(600)
+            .duration(300)
+            .attr("opacity", 1);
+
         // Center text
-        svg.append("text")
+        const centerGroup = svg.append("g").attr("opacity", 0);
+
+        centerGroup.append("text")
             .attr("text-anchor", "middle")
-            .attr("dy", "-0.3em")
+            .attr("dy", "-0.2em")
             .attr("fill", theme.palette.text.primary)
-            .attr("font-size", 18)
+            .attr("font-size", 22)
             .attr("font-weight", "bold")
             .text(applicants.length);
 
-        svg.append("text")
+        centerGroup.append("text")
             .attr("text-anchor", "middle")
-            .attr("dy", "1em")
+            .attr("dy", "1.2em")
             .attr("fill", theme.palette.text.secondary)
-            .attr("font-size", 10)
+            .attr("font-size", 11)
             .text("Total");
+
+        centerGroup
+            .transition()
+            .delay(700)
+            .duration(300)
+            .attr("opacity", 1);
 
     }, [experienceData, theme, applicants.length]);
 
@@ -138,26 +173,27 @@ export const ExperienceBreakdown = ({ applicants }: ExperienceBreakdownProps) =>
         <Paper
             elevation={0}
             sx={{
-                p: 3,
+                p: 2.5,
                 borderRadius: 3,
                 border: 1,
                 borderColor: 'divider',
                 height: '100%',
-                transition: 'box-shadow 0.3s ease',
-                '&:hover': { boxShadow: 4 }
+                transition: 'all 0.3s ease',
+                '&:hover': { boxShadow: 6 }
             }}
         >
             {/* Header */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
                 <Box sx={{
-                    width: 36,
-                    height: 36,
+                    width: 38,
+                    height: 38,
                     borderRadius: 2,
-                    bgcolor: 'secondary.main',
+                    background: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.dark} 100%)`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: 'secondary.contrastText'
+                    color: 'secondary.contrastText',
+                    boxShadow: `0 4px 12px ${theme.palette.secondary.main}40`
                 }}>
                     <School fontSize="small" />
                 </Box>
@@ -166,7 +202,7 @@ export const ExperienceBreakdown = ({ applicants }: ExperienceBreakdownProps) =>
                         Experience Levels
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                        Applicant background
+                        Hover for details
                     </Typography>
                 </Box>
             </Box>
@@ -174,8 +210,27 @@ export const ExperienceBreakdown = ({ applicants }: ExperienceBreakdownProps) =>
             {/* Content */}
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                 {/* Donut Chart */}
-                <Box sx={{ flexShrink: 0 }}>
+                <Box sx={{ flexShrink: 0, position: 'relative' }}>
                     <svg ref={svgRef}></svg>
+
+                    {/* Hover overlay */}
+                    <Fade in={!!hovered}>
+                        <Box sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            textAlign: 'center',
+                            pointerEvents: 'none'
+                        }}>
+                            <Typography variant="h5" fontWeight="bold" color="primary.main">
+                                {hovered?.percentage}%
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+                                {hovered?.name}
+                            </Typography>
+                        </Box>
+                    </Fade>
                 </Box>
 
                 {/* Legend */}
@@ -187,7 +242,12 @@ export const ExperienceBreakdown = ({ applicants }: ExperienceBreakdownProps) =>
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
-                                mb: 0.75
+                                mb: 0.75,
+                                p: 0.5,
+                                borderRadius: 1,
+                                transition: 'background-color 0.2s',
+                                bgcolor: hovered?.name === cat.name ? 'action.hover' : 'transparent',
+                                cursor: 'pointer'
                             }}
                         >
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -195,7 +255,8 @@ export const ExperienceBreakdown = ({ applicants }: ExperienceBreakdownProps) =>
                                     width: 10,
                                     height: 10,
                                     borderRadius: '50%',
-                                    bgcolor: cat.color
+                                    bgcolor: cat.color,
+                                    boxShadow: `0 2px 4px ${cat.color}40`
                                 }} />
                                 <Typography variant="caption" sx={{ fontSize: 11 }}>
                                     {cat.name}
