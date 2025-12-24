@@ -67,11 +67,16 @@ export function ApplicantsGrid({ applicants, onApplicantSelect, loading = false 
                 sx={{
                     border: 'none',
                     '& .MuiDataGrid-cell': {
-                        borderBottom: '1px solid #f1f5f9'
+                        borderBottom: 1,
+                        borderColor: 'divider',
                     },
                     '& .MuiDataGrid-columnHeaders': {
                         bgcolor: 'background.default',
-                        borderBottom: '1px solid #e2e8f0',
+                        borderBottom: 1,
+                        borderColor: 'divider',
+                    },
+                    '& .MuiDataGrid-row:hover': {
+                        bgcolor: 'action.hover',
                     },
                 }}
             />

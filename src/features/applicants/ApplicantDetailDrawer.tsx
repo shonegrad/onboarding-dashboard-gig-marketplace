@@ -69,8 +69,16 @@ export function ApplicantDetailDrawer({ applicant, open, onClose, onStatusUpdate
                 anchor="right"
                 open={open}
                 onClose={onClose}
+                transitionDuration={400}
                 sx={{
-                    '& .MuiDrawer-paper': { width: { xs: '100%', sm: drawerWidth }, p: 0 },
+                    '& .MuiDrawer-paper': {
+                        width: { xs: '100%', sm: drawerWidth },
+                        p: 0,
+                        boxShadow: '-4px 0 20px rgba(0,0,0,0.1)', // Enhance depth
+                    },
+                    '& .MuiBackdrop-root': {
+                        backdropFilter: 'blur(2px)', // Modern glass blur
+                    }
                 }}
             >
                 {/* Header */}
