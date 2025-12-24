@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Box, Typography, Paper, Chip } from '@mui/material';
+import { Work } from '@mui/icons-material';
 import { generateMockApplicants } from '../../data/mockData';
 import { useAnalyticsData } from './useAnalyticsData';
 import { GeographicMap } from './GeographicMap';
@@ -9,6 +10,10 @@ import { KPICards } from './KPICards';
 import { DateRangeFilter, DateRangePreset, getDateRangeFromPreset } from './DateRangeFilter';
 import { PipelineHealth } from './PipelineHealth';
 import { RegionalComparison } from './RegionalComparison';
+import { TimeToHireChart } from './TimeToHireChart';
+import { ExperienceBreakdown } from './ExperienceBreakdown';
+import { RatingDistribution } from './RatingDistribution';
+import { RecentActivity } from './RecentActivity';
 import { Applicant } from '../../types';
 
 interface AnalyticsDashboardProps {
@@ -127,7 +132,7 @@ export const AnalyticsDashboard = ({ applicants: propApplicants }: AnalyticsDash
                 </Box>
             </Box>
 
-            {/* Row 2: Trend, Funnel */}
+            {/* Row 2: Trend Chart and Funnel */}
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3 }}>
                 <Box sx={{ flex: '2 1 400px', minWidth: 0 }}>
                     <ApplicationTrendChart data={trendData} />
@@ -141,45 +146,103 @@ export const AnalyticsDashboard = ({ applicants: propApplicants }: AnalyticsDash
                 </Box>
             </Box>
 
-            {/* Row 3: Regional Comparison and Top Roles */}
+            {/* Row 3: Time-to-Hire and Small Widgets */}
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3 }}>
+                <Box sx={{ flex: '2 1 400px', minWidth: 0 }}>
+                    <TimeToHireChart applicants={applicants} />
+                </Box>
+                <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
+                    <ExperienceBreakdown applicants={applicants} />
+                </Box>
+                <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
+                    <RatingDistribution applicants={applicants} />
+                </Box>
+            </Box>
+
+            {/* Row 4: Regional, Recent Activity, Top Roles */}
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                <Box sx={{ flex: '2 1 500px', minWidth: 0 }}>
+                <Box sx={{ flex: '2 1 400px', minWidth: 0 }}>
                     <RegionalComparison applicants={applicants} onCountryClick={handleCountryClick} />
                 </Box>
-                <Box sx={{ flex: '1 1 250px', minWidth: 250 }}>
-                    <Paper sx={{ p: 3, height: '100%', borderRadius: 2 }}>
-                        <Typography variant="h6" fontWeight="bold" gutterBottom>
-                            Top Roles
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            Most common job titles
-                        </Typography>
+                <Box sx={{ flex: '1 1 280px', minWidth: 280 }}>
+                    <RecentActivity applicants={allApplicants} limit={5} />
+                </Box>
+                <Box sx={{ flex: '1 1 220px', minWidth: 220 }}>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 3,
+                            height: '100%',
+                            borderRadius: 3,
+                            border: 1,
+                            borderColor: 'divider',
+                            transition: 'box-shadow 0.3s ease',
+                            '&:hover': { boxShadow: 4 }
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                            <Box sx={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 2,
+                                bgcolor: 'success.main',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'success.contrastText'
+                            }}>
+                                <Work fontSize="small" />
+                            </Box>
+                            <Box>
+                                <Typography variant="subtitle1" fontWeight="bold">
+                                    Top Roles
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Most common
+                                </Typography>
+                            </Box>
+                        </Box>
                         <Box component="ul" sx={{ p: 0, m: 0, listStyle: 'none' }}>
                             {roleDistribution.slice(0, 5).map((role, i) => (
                                 <Box component="li" key={role.name} sx={{
-                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                    mb: 2, pb: 1, borderBottom: '1px solid', borderColor: 'divider'
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    py: 1,
+                                    borderBottom: i < 4 ? '1px solid' : 'none',
+                                    borderColor: 'divider'
                                 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                         <Box sx={{
-                                            width: 24,
-                                            height: 24,
+                                            width: 22,
+                                            height: 22,
                                             borderRadius: '50%',
-                                            bgcolor: 'primary.main',
-                                            color: 'primary.contrastText',
+                                            bgcolor: i === 0 ? 'warning.main' : i === 1 ? 'grey.400' : i === 2 ? 'warning.dark' : 'action.selected',
+                                            color: i < 3 ? 'warning.contrastText' : 'text.primary',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            fontSize: 12,
+                                            fontSize: 11,
                                             fontWeight: 'bold'
                                         }}>
                                             {i + 1}
                                         </Box>
-                                        <Typography variant="body2" sx={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        <Typography
+                                            variant="body2"
+                                            sx={{
+                                                maxWidth: 130,
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                                fontSize: 12
+                                            }}
+                                        >
                                             {role.name}
                                         </Typography>
                                     </Box>
-                                    <Typography variant="body2" fontWeight="bold">{role.value}</Typography>
+                                    <Typography variant="body2" fontWeight="bold" color="primary.main">
+                                        {role.value}
+                                    </Typography>
                                 </Box>
                             ))}
                         </Box>
