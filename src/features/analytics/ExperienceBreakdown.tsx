@@ -1,9 +1,10 @@
 import { useMemo, useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { useTheme } from '@mui/material/styles';
-import { Box, Typography, Paper, Fade } from '@mui/material';
+import { Box, Typography, Fade, Table, TableBody, TableCell, TableHead, TableRow, Divider, Chip } from '@mui/material';
 import { School } from '@mui/icons-material';
 import { Applicant } from '../../types';
+import { ExpandableCard } from '../../components/ExpandableCard';
 
 interface ExperienceBreakdownProps {
     applicants: Applicant[];
@@ -19,32 +20,31 @@ interface ExperienceCategory {
 export const ExperienceBreakdown = ({ applicants }: ExperienceBreakdownProps) => {
     const svgRef = useRef<SVGSVGElement>(null);
     const theme = useTheme();
-    const [hovered, setHovered] = useState<{ name: string; count: number; percentage: number } | null>(null);
+    const [hovered, setHovered] = useState<string | null>(null);
 
-    const experienceData = useMemo((): ExperienceCategory[] => {
-        const categories = {
-            'No Experience': 0,
-            '< 1 Year': 0,
-            '1-2 Years': 0,
-            '3-4 Years': 0,
-            '5+ Years': 0
+    const experienceData = useMemo(() => {
+        const categories: Record<string, { count: number; applicants: Applicant[] }> = {
+            'No Experience': { count: 0, applicants: [] },
+            '< 1 Year': { count: 0, applicants: [] },
+            '1-2 Years': { count: 0, applicants: [] },
+            '3-4 Years': { count: 0, applicants: [] },
+            '5+ Years': { count: 0, applicants: [] }
         };
 
         applicants.forEach(a => {
             const exp = a.experience?.toLowerCase() || '';
-            if (exp.includes('no prior') || exp.includes('new to')) {
-                categories['No Experience']++;
-            } else if (exp.includes('6 months') || exp.includes('1 year') && !exp.includes('2')) {
-                categories['< 1 Year']++;
-            } else if (exp.includes('1 year') || exp.includes('2 year')) {
-                categories['1-2 Years']++;
+            let category = 'No Experience';
+            if (exp.includes('5 year') || (exp.includes('years') && !exp.includes('1') && !exp.includes('2'))) {
+                category = '5+ Years';
             } else if (exp.includes('3 year') || exp.includes('4 year')) {
-                categories['3-4 Years']++;
-            } else if (exp.includes('5 year') || exp.includes('years')) {
-                categories['5+ Years']++;
-            } else {
-                categories['No Experience']++;
+                category = '3-4 Years';
+            } else if (exp.includes('1 year') || exp.includes('2 year')) {
+                category = '1-2 Years';
+            } else if (exp.includes('6 months') || exp.includes('month')) {
+                category = '< 1 Year';
             }
+            categories[category].count++;
+            categories[category].applicants.push(a);
         });
 
         const total = applicants.length || 1;
@@ -56,11 +56,12 @@ export const ExperienceBreakdown = ({ applicants }: ExperienceBreakdownProps) =>
             theme.palette.success.main,
         ];
 
-        return Object.entries(categories).map(([name, count], i) => ({
+        return Object.entries(categories).map(([name, data], i): ExperienceCategory & { applicants: Applicant[] } => ({
             name,
-            count,
-            percentage: Math.round((count / total) * 100),
-            color: colors[i]
+            count: data.count,
+            percentage: Math.round((data.count / total) * 100),
+            color: colors[i],
+            applicants: data.applicants
         }));
     }, [applicants, theme]);
 
@@ -69,10 +70,10 @@ export const ExperienceBreakdown = ({ applicants }: ExperienceBreakdownProps) =>
 
         d3.select(svgRef.current).selectAll("*").remove();
 
-        const width = 140;
-        const height = 140;
+        const width = 120;
+        const height = 120;
         const radius = Math.min(width, height) / 2;
-        const innerRadius = radius * 0.58;
+        const innerRadius = radius * 0.55;
 
         const svg = d3.select(svgRef.current)
             .attr("width", width)
@@ -88,187 +89,112 @@ export const ExperienceBreakdown = ({ applicants }: ExperienceBreakdownProps) =>
         const arc = d3.arc<d3.PieArcDatum<ExperienceCategory>>()
             .innerRadius(innerRadius)
             .outerRadius(radius)
-            .cornerRadius(4);
+            .cornerRadius(3);
 
-        const hoverArc = d3.arc<d3.PieArcDatum<ExperienceCategory>>()
-            .innerRadius(innerRadius)
-            .outerRadius(radius + 6)
-            .cornerRadius(4);
-
-        const arcs = svg.selectAll(".arc")
+        svg.selectAll(".arc")
             .data(pie(experienceData))
             .enter()
-            .append("g")
-            .attr("class", "arc");
-
-        arcs.append("path")
+            .append("path")
             .attr("d", arc)
             .attr("fill", d => d.data.color)
-            .style("cursor", "pointer")
-            .style("filter", "drop-shadow(0 2px 4px rgba(0,0,0,0.15))")
-            .attr("opacity", 0)
-            .transition()
-            .duration(600)
-            .delay((_, i) => i * 100)
-            .attrTween("d", function (d) {
-                const interpolate = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
-                return (t) => arc(interpolate(t)) || "";
-            })
-            .attr("opacity", 1);
-
-        // Re-select for event handlers after animation
-        svg.selectAll(".arc path")
-            .on("mouseenter", function (event, d: any) {
-                d3.select(this)
-                    .transition()
-                    .duration(200)
-                    .attr("d", hoverArc(d));
-                setHovered({ name: d.data.name, count: d.data.count, percentage: d.data.percentage });
-            })
-            .on("mouseleave", function (event, d: any) {
-                d3.select(this)
-                    .transition()
-                    .duration(200)
-                    .attr("d", arc(d));
-                setHovered(null);
-            });
-
-        // Center circle background
-        svg.append("circle")
-            .attr("r", innerRadius - 4)
-            .attr("fill", theme.palette.background.paper)
-            .attr("opacity", 0)
-            .transition()
-            .delay(600)
-            .duration(300)
-            .attr("opacity", 1);
+            .attr("opacity", d => hovered === d.data.name ? 1 : hovered ? 0.4 : 1)
+            .style("transition", "opacity 0.2s");
 
         // Center text
-        const centerGroup = svg.append("g").attr("opacity", 0);
-
-        centerGroup.append("text")
+        svg.append("text")
             .attr("text-anchor", "middle")
-            .attr("dy", "-0.2em")
+            .attr("dy", "-0.1em")
             .attr("fill", theme.palette.text.primary)
-            .attr("font-size", 22)
+            .attr("font-size", 18)
             .attr("font-weight", "bold")
             .text(applicants.length);
 
-        centerGroup.append("text")
+        svg.append("text")
             .attr("text-anchor", "middle")
-            .attr("dy", "1.2em")
+            .attr("dy", "1.3em")
             .attr("fill", theme.palette.text.secondary)
-            .attr("font-size", 11)
+            .attr("font-size", 10)
             .text("Total");
 
-        centerGroup
-            .transition()
-            .delay(700)
-            .duration(300)
-            .attr("opacity", 1);
+    }, [experienceData, theme, applicants.length, hovered]);
 
-    }, [experienceData, theme, applicants.length]);
+    const summaryView = (
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Box sx={{ flexShrink: 0 }}>
+                <svg ref={svgRef}></svg>
+            </Box>
+            <Box sx={{ flex: 1 }}>
+                {experienceData.map((cat) => (
+                    <Box
+                        key={cat.name}
+                        onMouseEnter={() => setHovered(cat.name)}
+                        onMouseLeave={() => setHovered(null)}
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            mb: 0.5,
+                            p: 0.5,
+                            borderRadius: 1,
+                            bgcolor: hovered === cat.name ? 'action.hover' : 'transparent',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s'
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: cat.color }} />
+                            <Typography variant="caption" sx={{ fontSize: 10 }}>{cat.name}</Typography>
+                        </Box>
+                        <Typography variant="caption" fontWeight="bold" sx={{ fontSize: 10 }}>{cat.percentage}%</Typography>
+                    </Box>
+                ))}
+            </Box>
+        </Box>
+    );
+
+    const detailsView = (
+        <Box>
+            {experienceData.map((cat) => (
+                <Box key={cat.name} sx={{ mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: cat.color }} />
+                        <Typography variant="body2" fontWeight="bold">{cat.name}</Typography>
+                        <Chip label={cat.count} size="small" sx={{ height: 18, fontSize: 10 }} />
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                        {cat.applicants.slice(0, 5).map(a => (
+                            <Chip
+                                key={a.id}
+                                label={a.name.split(' ')[0]}
+                                size="small"
+                                variant="outlined"
+                                sx={{ height: 20, fontSize: 9 }}
+                            />
+                        ))}
+                        {cat.applicants.length > 5 && (
+                            <Chip
+                                label={`+${cat.applicants.length - 5}`}
+                                size="small"
+                                sx={{ height: 20, fontSize: 9, bgcolor: 'action.selected' }}
+                            />
+                        )}
+                    </Box>
+                </Box>
+            ))}
+        </Box>
+    );
+
+    const topCategory = experienceData.reduce((a, b) => a.count > b.count ? a : b);
 
     return (
-        <Paper
-            elevation={0}
-            sx={{
-                p: 2.5,
-                borderRadius: 3,
-                border: 1,
-                borderColor: 'divider',
-                height: '100%',
-                transition: 'all 0.3s ease',
-                '&:hover': { boxShadow: 6 }
-            }}
-        >
-            {/* Header */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                <Box sx={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 2,
-                    background: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.dark} 100%)`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'secondary.contrastText',
-                    boxShadow: `0 4px 12px ${theme.palette.secondary.main}40`
-                }}>
-                    <School fontSize="small" />
-                </Box>
-                <Box>
-                    <Typography variant="subtitle1" fontWeight="bold">
-                        Experience Levels
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        Hover for details
-                    </Typography>
-                </Box>
-            </Box>
-
-            {/* Content */}
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                {/* Donut Chart */}
-                <Box sx={{ flexShrink: 0, position: 'relative' }}>
-                    <svg ref={svgRef}></svg>
-
-                    {/* Hover overlay */}
-                    <Fade in={!!hovered}>
-                        <Box sx={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            textAlign: 'center',
-                            pointerEvents: 'none'
-                        }}>
-                            <Typography variant="h5" fontWeight="bold" color="primary.main">
-                                {hovered?.percentage}%
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
-                                {hovered?.name}
-                            </Typography>
-                        </Box>
-                    </Fade>
-                </Box>
-
-                {/* Legend */}
-                <Box sx={{ flex: 1 }}>
-                    {experienceData.map((cat) => (
-                        <Box
-                            key={cat.name}
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                mb: 0.75,
-                                p: 0.5,
-                                borderRadius: 1,
-                                transition: 'background-color 0.2s',
-                                bgcolor: hovered?.name === cat.name ? 'action.hover' : 'transparent',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Box sx={{
-                                    width: 10,
-                                    height: 10,
-                                    borderRadius: '50%',
-                                    bgcolor: cat.color,
-                                    boxShadow: `0 2px 4px ${cat.color}40`
-                                }} />
-                                <Typography variant="caption" sx={{ fontSize: 11 }}>
-                                    {cat.name}
-                                </Typography>
-                            </Box>
-                            <Typography variant="caption" fontWeight="bold" sx={{ fontSize: 11 }}>
-                                {cat.percentage}%
-                            </Typography>
-                        </Box>
-                    ))}
-                </Box>
-            </Box>
-        </Paper>
+        <ExpandableCard
+            title="Experience Levels"
+            subtitle="Distribution breakdown"
+            icon={<School />}
+            iconBgColor="secondary.main"
+            summaryStats={[{ label: 'Top', value: topCategory.name }]}
+            summary={summaryView}
+            details={detailsView}
+        />
     );
 };

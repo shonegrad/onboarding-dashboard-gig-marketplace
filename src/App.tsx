@@ -10,6 +10,13 @@ import { ActivityFeedPlaceholderPage } from './features/feed/ActivityFeedPlaceho
 import { generateMockApplicants } from './data/mockData';
 import { Applicant, OnboardingStatus } from './types';
 import { Toaster, toast } from 'sonner';
+import { DateRangePreset } from './features/analytics/DateRangeFilter';
+
+export interface FilterState {
+  dateRange: DateRangePreset;
+  selectedCountry: string | null;
+  selectedStage: string | null;
+}
 
 export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -17,6 +24,13 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('applicants');
   const [applicants, setApplicants] = useState<Applicant[]>(generateMockApplicants());
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
+
+  // Global filter state for analytics
+  const [filters, setFilters] = useState<FilterState>({
+    dateRange: '30d',
+    selectedCountry: null,
+    selectedStage: null
+  });
 
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
   const currentTheme = useMemo(() => theme(isDarkMode ? 'dark' : 'light'), [isDarkMode]);
@@ -50,6 +64,14 @@ export default function App() {
     }
   };
 
+  const handleFilterChange = (newFilters: Partial<FilterState>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
+
+  const clearFilters = () => {
+    setFilters(prev => ({ ...prev, selectedCountry: null, selectedStage: null }));
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'applicants':
@@ -63,7 +85,13 @@ export default function App() {
           />
         );
       case 'analytics':
-        return <AnalyticsDashboard applicants={applicants} />;
+        return (
+          <AnalyticsDashboard
+            applicants={applicants}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+          />
+        );
       case 'map':
         return <MapOverviewPage applicants={applicants} />;
       case 'feed':
@@ -85,6 +113,10 @@ export default function App() {
         onTabChange={setActiveTab}
         toggleTheme={toggleTheme}
         isDarkMode={isDarkMode}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onClearFilters={clearFilters}
+        showFilters={activeTab === 'analytics'}
       >
         {renderContent()}
       </AppShell>

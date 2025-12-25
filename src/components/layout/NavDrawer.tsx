@@ -32,7 +32,6 @@ interface NavDrawerProps {
 const navItems = [
     { id: 'applicants', label: 'Applicants', icon: <PeopleIcon /> },
     { id: 'analytics', label: 'Analytics', icon: <BarChartIcon /> },
-    { id: 'map', label: 'Map Overview', icon: <MapIcon /> },
     { id: 'feed', label: 'Activity Feed', icon: <FeedIcon /> },
 ];
 

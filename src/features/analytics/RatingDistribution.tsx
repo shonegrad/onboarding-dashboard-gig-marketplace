@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Box, Typography, Paper, Rating, LinearProgress } from '@mui/material';
+import { Box, Typography, Rating, LinearProgress, Table, TableBody, TableCell, TableRow, Divider } from '@mui/material';
 import { Star } from '@mui/icons-material';
 import { Applicant } from '../../types';
+import { ExpandableCard } from '../../components/ExpandableCard';
 
 interface RatingDistributionProps {
     applicants: Applicant[];
@@ -12,8 +13,7 @@ export const RatingDistribution = ({ applicants }: RatingDistributionProps) => {
     const theme = useTheme();
 
     const ratingData = useMemo(() => {
-        // Count ratings by star level
-        const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+        const distribution: Record<number, Applicant[]> = { 5: [], 4: [], 3: [], 2: [], 1: [] };
         let totalRating = 0;
         let ratedCount = 0;
 
@@ -21,7 +21,7 @@ export const RatingDistribution = ({ applicants }: RatingDistributionProps) => {
             if (a.rating) {
                 const rounded = Math.round(a.rating);
                 if (rounded >= 1 && rounded <= 5) {
-                    distribution[rounded as keyof typeof distribution]++;
+                    distribution[rounded].push(a);
                 }
                 totalRating += a.rating;
                 ratedCount++;
@@ -29,14 +29,15 @@ export const RatingDistribution = ({ applicants }: RatingDistributionProps) => {
         });
 
         const average = ratedCount > 0 ? (totalRating / ratedCount).toFixed(1) : '0.0';
-        const maxCount = Math.max(...Object.values(distribution), 1);
+        const maxCount = Math.max(...Object.values(distribution).map(arr => arr.length), 1);
 
         return {
             distribution: Object.entries(distribution)
-                .map(([stars, count]) => ({
+                .map(([stars, apps]) => ({
                     stars: parseInt(stars),
-                    count,
-                    percentage: Math.round((count / maxCount) * 100)
+                    count: apps.length,
+                    percentage: Math.round((apps.length / maxCount) * 100),
+                    applicants: apps
                 }))
                 .sort((a, b) => b.stars - a.stars),
             average: parseFloat(average),
@@ -50,91 +51,82 @@ export const RatingDistribution = ({ applicants }: RatingDistributionProps) => {
         return theme.palette.error.main;
     };
 
-    return (
-        <Paper
-            elevation={0}
-            sx={{
-                p: 3,
-                borderRadius: 3,
-                border: 1,
-                borderColor: 'divider',
-                height: '100%',
-                transition: 'box-shadow 0.3s ease',
-                '&:hover': { boxShadow: 4 }
-            }}
-        >
-            {/* Header */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-                <Box sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 2,
-                    bgcolor: 'warning.main',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'warning.contrastText'
-                }}>
-                    <Star fontSize="small" />
-                </Box>
-                <Box>
-                    <Typography variant="subtitle1" fontWeight="bold">
-                        Rating Distribution
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        {ratingData.totalRated} rated applicants
-                    </Typography>
-                </Box>
-            </Box>
-
-            {/* Average Rating */}
-            <Box sx={{ textAlign: 'center', mb: 3 }}>
-                <Typography variant="h3" fontWeight="bold" color="warning.main">
+    const summaryView = (
+        <Box>
+            <Box sx={{ textAlign: 'center', mb: 2 }}>
+                <Typography variant="h4" fontWeight="bold" color="warning.main">
                     {ratingData.average}
                 </Typography>
-                <Rating
-                    value={ratingData.average}
-                    precision={0.1}
-                    readOnly
-                    size="small"
-                    sx={{ color: 'warning.main' }}
-                />
-                <Typography variant="caption" color="text.secondary" display="block">
-                    Average Rating
-                </Typography>
+                <Rating value={ratingData.average} precision={0.1} readOnly size="small" sx={{ color: 'warning.main' }} />
             </Box>
-
-            {/* Distribution Bars */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {ratingData.distribution.map(({ stars, count, percentage }) => (
-                    <Box key={stars} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', width: 36 }}>
-                            <Typography variant="body2" fontWeight="bold" sx={{ mr: 0.5 }}>
-                                {stars}
-                            </Typography>
-                            <Star sx={{ fontSize: 14, color: getStarColor(stars) }} />
+                    <Box key={stars} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', width: 32 }}>
+                            <Typography variant="caption" fontWeight="bold" sx={{ mr: 0.5 }}>{stars}</Typography>
+                            <Star sx={{ fontSize: 12, color: getStarColor(stars) }} />
                         </Box>
                         <Box sx={{ flex: 1 }}>
                             <LinearProgress
                                 variant="determinate"
                                 value={percentage}
                                 sx={{
-                                    height: 8,
-                                    borderRadius: 4,
+                                    height: 6,
+                                    borderRadius: 3,
                                     bgcolor: 'action.hover',
-                                    '& .MuiLinearProgress-bar': {
-                                        borderRadius: 4,
-                                        bgcolor: getStarColor(stars)
-                                    }
+                                    '& .MuiLinearProgress-bar': { borderRadius: 3, bgcolor: getStarColor(stars) }
                                 }}
                             />
                         </Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ width: 28, textAlign: 'right' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ width: 24, textAlign: 'right' }}>
                             {count}
                         </Typography>
                     </Box>
                 ))}
             </Box>
-        </Paper>
+        </Box>
+    );
+
+    const detailsView = (
+        <Box>
+            {ratingData.distribution.filter(d => d.count > 0).map(({ stars, applicants: apps }) => (
+                <Box key={stars} sx={{ mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <Rating value={stars} readOnly size="small" sx={{ color: getStarColor(stars) }} />
+                        <Typography variant="caption" color="text.secondary">({apps.length})</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                        {apps.slice(0, 4).map(a => (
+                            <Box key={a.id} sx={{
+                                px: 1,
+                                py: 0.25,
+                                bgcolor: 'action.selected',
+                                borderRadius: 1,
+                                fontSize: 10
+                            }}>
+                                {a.name.split(' ')[0]}
+                            </Box>
+                        ))}
+                        {apps.length > 4 && (
+                            <Box sx={{ px: 1, py: 0.25, bgcolor: 'action.hover', borderRadius: 1, fontSize: 10 }}>
+                                +{apps.length - 4}
+                            </Box>
+                        )}
+                    </Box>
+                </Box>
+            ))}
+        </Box>
+    );
+
+    return (
+        <ExpandableCard
+            title="Rating Distribution"
+            subtitle={`${ratingData.totalRated} rated`}
+            icon={<Star />}
+            iconBgColor="warning.main"
+            summaryStats={[{ label: 'Avg', value: ratingData.average.toString() }]}
+            summary={summaryView}
+            details={detailsView}
+        />
     );
 };

@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Box, Typography, Paper, Chip } from '@mui/material';
+import { useMemo } from 'react';
+import { Box, Typography, Paper } from '@mui/material';
 import { Work } from '@mui/icons-material';
 import { generateMockApplicants } from '../../data/mockData';
 import { useAnalyticsData } from './useAnalyticsData';
@@ -7,7 +7,7 @@ import { GeographicMap } from './GeographicMap';
 import { ApplicationTrendChart } from './ApplicationTrendChart';
 import { RecruitmentFunnel } from './RecruitmentFunnel';
 import { KPICards } from './KPICards';
-import { DateRangeFilter, DateRangePreset, getDateRangeFromPreset } from './DateRangeFilter';
+import { getDateRangeFromPreset } from './DateRangeFilter';
 import { PipelineHealth } from './PipelineHealth';
 import { RegionalComparison } from './RegionalComparison';
 import { TimeToHireChart } from './TimeToHireChart';
@@ -18,18 +18,25 @@ import { ApplicationSource } from './ApplicationSource';
 import { WeeklyComparison } from './WeeklyComparison';
 import { SkillsCertifications } from './SkillsCertifications';
 import { Applicant } from '../../types';
+import { FilterState } from '../../App';
 
 interface AnalyticsDashboardProps {
     applicants?: Applicant[];
+    filters?: FilterState;
+    onFilterChange?: (filters: Partial<FilterState>) => void;
 }
 
-export const AnalyticsDashboard = ({ applicants: propApplicants }: AnalyticsDashboardProps) => {
+export const AnalyticsDashboard = ({
+    applicants: propApplicants,
+    filters,
+    onFilterChange
+}: AnalyticsDashboardProps) => {
     const allApplicants = propApplicants || generateMockApplicants();
 
-    // Filter state
-    const [dateRange, setDateRange] = useState<DateRangePreset>('30d');
-    const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-    const [selectedStage, setSelectedStage] = useState<string | null>(null);
+    // Use props filters or defaults
+    const dateRange = filters?.dateRange || '30d';
+    const selectedCountry = filters?.selectedCountry || null;
+    const selectedStage = filters?.selectedStage || null;
 
     // Apply filters
     const applicants = useMemo(() => {
@@ -58,65 +65,28 @@ export const AnalyticsDashboard = ({ applicants: propApplicants }: AnalyticsDash
     const { funnelCounts, mapData, trendData, roleDistribution } = useAnalyticsData(applicants);
 
     const handleCountryClick = (country: string) => {
-        setSelectedCountry(prev => prev === country ? null : country);
+        if (onFilterChange) {
+            onFilterChange({ selectedCountry: selectedCountry === country ? null : country });
+        }
     };
 
     const handleStageClick = (stage: string) => {
-        setSelectedStage(prev => prev === stage ? null : stage);
+        if (onFilterChange) {
+            onFilterChange({ selectedStage: selectedStage === stage ? null : stage });
+        }
     };
-
-    const clearFilters = () => {
-        setSelectedCountry(null);
-        setSelectedStage(null);
-    };
-
-    const hasActiveFilters = selectedCountry || selectedStage;
 
     return (
         <Box sx={{ p: 3, maxWidth: 1600, margin: '0 auto' }}>
-            {/* Header with filters */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-                <Box>
-                    <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        Intelligence Dashboard
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        Real-time insights into global recruitment performance
-                    </Typography>
-                </Box>
-                <DateRangeFilter value={dateRange} onChange={setDateRange} />
+            {/* Header - simplified since filters are in navbar */}
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h4" fontWeight="bold" gutterBottom>
+                    Intelligence Dashboard
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                    {applicants.length} applicants • Use navbar controls to filter
+                </Typography>
             </Box>
-
-            {/* Active filters indicator */}
-            {hasActiveFilters && (
-                <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <Typography variant="body2" color="text.secondary">Filters:</Typography>
-                    {selectedCountry && (
-                        <Chip
-                            label={selectedCountry}
-                            size="small"
-                            onDelete={() => setSelectedCountry(null)}
-                            color="primary"
-                            variant="outlined"
-                        />
-                    )}
-                    {selectedStage && (
-                        <Chip
-                            label={selectedStage}
-                            size="small"
-                            onDelete={() => setSelectedStage(null)}
-                            color="secondary"
-                            variant="outlined"
-                        />
-                    )}
-                    <Chip
-                        label="Clear all"
-                        size="small"
-                        onClick={clearFilters}
-                        variant="outlined"
-                    />
-                </Box>
-            )}
 
             {/* KPI Cards */}
             <KPICards applicants={applicants} />
@@ -149,28 +119,36 @@ export const AnalyticsDashboard = ({ applicants: propApplicants }: AnalyticsDash
                 </Box>
             </Box>
 
-            {/* Row 3: Time-to-Hire and Small Widgets */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3 }}>
-                <Box sx={{ flex: '2 1 400px', minWidth: 0 }}>
-                    <TimeToHireChart applicants={applicants} />
-                </Box>
-                <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
-                    <ExperienceBreakdown applicants={applicants} />
-                </Box>
-                <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
-                    <RatingDistribution applicants={applicants} />
-                </Box>
+            {/* Row 3: Expandable Insight Cards */}
+            <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+                Detailed Insights
+            </Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 3, mb: 3 }}>
+                <TimeToHireChart applicants={applicants} />
+                <ExperienceBreakdown applicants={applicants} />
+                <RatingDistribution applicants={applicants} />
+                <SkillsCertifications applicants={applicants} />
             </Box>
 
-            {/* Row 4: Regional, Recent Activity, Top Roles */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+            {/* Row 4: Regional, Source, Weekly, Activity */}
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3 }}>
                 <Box sx={{ flex: '2 1 400px', minWidth: 0 }}>
                     <RegionalComparison applicants={applicants} onCountryClick={handleCountryClick} />
                 </Box>
-                <Box sx={{ flex: '1 1 280px', minWidth: 280 }}>
-                    <RecentActivity applicants={allApplicants} limit={5} />
+                <Box sx={{ flex: '1 1 250px', minWidth: 250 }}>
+                    <ApplicationSource applicants={applicants} />
                 </Box>
-                <Box sx={{ flex: '1 1 220px', minWidth: 220 }}>
+                <Box sx={{ flex: '1 1 250px', minWidth: 250 }}>
+                    <WeeklyComparison applicants={applicants} />
+                </Box>
+            </Box>
+
+            {/* Row 5: Recent Activity and Top Roles */}
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                <Box sx={{ flex: '1 1 350px', minWidth: 300 }}>
+                    <RecentActivity applicants={allApplicants} limit={6} />
+                </Box>
+                <Box sx={{ flex: '1 1 250px', minWidth: 250 }}>
                     <Paper
                         elevation={0}
                         sx={{
@@ -196,14 +174,9 @@ export const AnalyticsDashboard = ({ applicants: propApplicants }: AnalyticsDash
                             }}>
                                 <Work fontSize="small" />
                             </Box>
-                            <Box>
-                                <Typography variant="subtitle1" fontWeight="bold">
-                                    Top Roles
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                    Most common
-                                </Typography>
-                            </Box>
+                            <Typography variant="subtitle1" fontWeight="bold">
+                                Top Roles
+                            </Typography>
                         </Box>
                         <Box component="ul" sx={{ p: 0, m: 0, listStyle: 'none' }}>
                             {roleDistribution.slice(0, 5).map((role, i) => (
@@ -217,52 +190,38 @@ export const AnalyticsDashboard = ({ applicants: propApplicants }: AnalyticsDash
                                 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                         <Box sx={{
-                                            width: 22,
-                                            height: 22,
+                                            width: 20,
+                                            height: 20,
                                             borderRadius: '50%',
                                             bgcolor: i === 0 ? 'warning.main' : i === 1 ? 'grey.400' : i === 2 ? 'warning.dark' : 'action.selected',
                                             color: i < 3 ? 'warning.contrastText' : 'text.primary',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            fontSize: 11,
+                                            fontSize: 10,
                                             fontWeight: 'bold'
                                         }}>
                                             {i + 1}
                                         </Box>
                                         <Typography
-                                            variant="body2"
+                                            variant="caption"
                                             sx={{
-                                                maxWidth: 130,
+                                                maxWidth: 120,
                                                 overflow: 'hidden',
                                                 textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap',
-                                                fontSize: 12
+                                                whiteSpace: 'nowrap'
                                             }}
                                         >
                                             {role.name}
                                         </Typography>
                                     </Box>
-                                    <Typography variant="body2" fontWeight="bold" color="primary.main">
+                                    <Typography variant="caption" fontWeight="bold" color="primary.main">
                                         {role.value}
                                     </Typography>
                                 </Box>
                             ))}
                         </Box>
                     </Paper>
-                </Box>
-            </Box>
-
-            {/* Row 5: Application Source, Weekly Comparison, Skills */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mt: 3 }}>
-                <Box sx={{ flex: '1 1 280px', minWidth: 280 }}>
-                    <ApplicationSource applicants={applicants} />
-                </Box>
-                <Box sx={{ flex: '1 1 280px', minWidth: 280 }}>
-                    <WeeklyComparison applicants={applicants} />
-                </Box>
-                <Box sx={{ flex: '1 1 350px', minWidth: 350 }}>
-                    <SkillsCertifications applicants={applicants} />
                 </Box>
             </Box>
         </Box>
