@@ -264,8 +264,8 @@ export const AnalyticsDashboard = ({
                 </Box>
             </Box>
 
-            {/* Row 2: Funnel + Pipeline (2 columns) */}
-            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' } }}>
+            {/* Row 2: Funnel + Pipeline + App Velocity + App Source (4 columns) */}
+            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' } }}>
                 <Box sx={cardWrapper}>
                     <RecruitmentFunnel
                         data={funnelCounts}
@@ -276,20 +276,26 @@ export const AnalyticsDashboard = ({
                 <Box sx={cardWrapper}>
                     <PipelineHealth applicants={applicants} onStageClick={handleStageClick} />
                 </Box>
-            </Box>
-
-            {/* Row 3: Trends (2 columns) */}
-            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' } }}>
                 <Box sx={cardWrapper}>
                     <ApplicationTrendChart data={trendData} />
                 </Box>
                 <Box sx={cardWrapper}>
-                    <WeeklyTrends applicants={applicants} />
+                    <ApplicationSource applicants={applicants} />
                 </Box>
             </Box>
 
-            {/* Row 4: Time to Hire, Experience, Rating, Skills (4 columns - same row, same height) */}
-            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' } }}>
+            {/* Row 3: Weekly Trends + Recent Activity (2 columns) */}
+            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' } }}>
+                <Box sx={cardWrapper}>
+                    <WeeklyTrends applicants={applicants} />
+                </Box>
+                <Box sx={cardWrapper}>
+                    <RecentActivity applicants={allApplicants} limit={8} />
+                </Box>
+            </Box>
+
+            {/* Row 4: Time to Hire, Experience, Rating, Skills (4 columns) */}
+            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, mb: 0 }}>
                 <Box sx={cardWrapper}>
                     <TimeToHireChart applicants={applicants} />
                 </Box>
@@ -303,16 +309,7 @@ export const AnalyticsDashboard = ({
                     <SkillsCertifications applicants={applicants} />
                 </Box>
             </Box>
-
-            {/* Row 5: Source + Activity (2 columns) */}
-            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' }, mb: 0 }}>
-                <Box sx={cardWrapper}>
-                    <ApplicationSource applicants={applicants} />
-                </Box>
-                <Box sx={cardWrapper}>
-                    <RecentActivity applicants={allApplicants} limit={8} />
-                </Box>
-            </Box>
         </Box>
     );
 };
+
