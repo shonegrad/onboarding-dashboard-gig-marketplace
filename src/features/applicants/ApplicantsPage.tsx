@@ -26,7 +26,7 @@ export function ApplicantsPage({ applicants, selectedApplicant, onApplicantSelec
     const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLElement | null>(null);
     const [filters, setFilters] = useState<FilterState>(initialFilters);
     const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
 
     const filterOpen = Boolean(filterAnchorEl);
     const activeFilterCount = filters.statuses.length + (filters.location ? 1 : 0);
@@ -257,8 +257,6 @@ export function ApplicantsPage({ applicants, selectedApplicant, onApplicantSelec
                     loading={loading}
                     onApplicantSelect={onApplicantSelect}
                     onQuickAction={handleQuickAction}
-                    selectedIds={selectedIds}
-                    onSelectionChange={setSelectedIds}
                 />
             </Box>
 

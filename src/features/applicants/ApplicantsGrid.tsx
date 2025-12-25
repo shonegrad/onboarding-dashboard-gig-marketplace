@@ -1,7 +1,7 @@
-import { DataGrid, GridColDef, GridRenderCellParams, GridRowSelectionModel } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { Box, Typography, Avatar, Rating, IconButton, Tooltip, Chip } from '@mui/material';
 import { ArrowForward, Block, Visibility } from '@mui/icons-material';
-import { Applicant, OnboardingStatus } from '../../types';
+import { Applicant } from '../../types';
 import { StatusChip } from '../../components/common/StatusChip';
 import { getNextStage } from '../../utils/statusUtils';
 
@@ -10,8 +10,6 @@ interface ApplicantsGridProps {
     onApplicantSelect: (applicant: Applicant) => void;
     onQuickAction?: (applicant: Applicant, action: 'advance' | 'decline') => void;
     loading?: boolean;
-    selectedIds?: string[];
-    onSelectionChange?: (ids: string[]) => void;
 }
 
 const getDaysAgo = (dateStr: string) => {
@@ -27,9 +25,7 @@ export function ApplicantsGrid({
     applicants,
     onApplicantSelect,
     onQuickAction,
-    loading = false,
-    selectedIds = [],
-    onSelectionChange
+    loading = false
 }: ApplicantsGridProps) {
 
     const columns: GridColDef[] = [
@@ -180,11 +176,6 @@ export function ApplicantsGrid({
                 columns={columns}
                 loading={loading}
                 onRowClick={(params) => onApplicantSelect(params.row)}
-                rowSelectionModel={selectedIds}
-                onRowSelectionModelChange={(newSelection: GridRowSelectionModel) =>
-                    onSelectionChange?.(newSelection as string[])
-                }
-                checkboxSelection={!!onSelectionChange}
                 initialState={{
                     pagination: { paginationModel: { pageSize: 25 } },
                     sorting: { sortModel: [{ field: 'appliedDate', sort: 'desc' }] }
