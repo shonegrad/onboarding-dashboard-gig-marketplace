@@ -179,18 +179,17 @@ export const generateMockApplicants = (): Applicant[] => {
         '1494790108755-2616b612b04c', '1438761681033-6461ffad8d80', '1535713875002-d1d0cf227877'
     ];
 
-    // Scaled status distribution for 300 applicants maintaining same proportions
-    // Original: 22 Applied, 10 Invited to Interview, 8 Interview Scheduled, 4 Invited to Training, 2 In Training, 50 Go Live, 15 Declined, 1 Under Review
-    // Scale factor: 300/112 ≈ 2.68
+    // Scaled status distribution for 500 applicants
+    // Original proportions scaled up for more diverse data
     const statusDistribution = [
-        ...Array(59).fill('Applied'), // ~22 * 2.68
-        ...Array(27).fill('Invited to Interview'), // ~10 * 2.68
-        ...Array(21).fill('Interview Scheduled'), // ~8 * 2.68
-        ...Array(11).fill('Invited to Training'), // ~4 * 2.68
-        ...Array(5).fill('In Training'), // ~2 * 2.68
-        ...Array(134).fill('Go Live'), // ~50 * 2.68
-        ...Array(40).fill('Declined'), // ~15 * 2.68
-        ...Array(3).fill('Under Review') // ~1 * 2.68
+        ...Array(98).fill('Applied'), // 19.6%
+        ...Array(45).fill('Invited to Interview'), // 9%
+        ...Array(35).fill('Interview Scheduled'), // 7%
+        ...Array(18).fill('Invited to Training'), // 3.6%
+        ...Array(9).fill('In Training'), // 1.8%
+        ...Array(223).fill('Go Live'), // 44.6%
+        ...Array(67).fill('Declined'), // 13.4%
+        ...Array(5).fill('Under Review') // 1%
     ];
 
     const interviewTimes = [
@@ -236,7 +235,7 @@ export const generateMockApplicants = (): Applicant[] => {
         return changeDate.toISOString().split('T')[0];
     };
 
-    return Array.from({ length: 300 }, (_, index) => {
+    return Array.from({ length: 500 }, (_, index) => {
         // Randomly choose gender
         const isMale = Math.random() > 0.5;
         const firstName = isMale
