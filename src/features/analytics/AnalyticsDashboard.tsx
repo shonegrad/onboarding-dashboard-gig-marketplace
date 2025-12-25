@@ -260,7 +260,7 @@ export const AnalyticsDashboard = ({
                     />
                 </Box>
                 <Box sx={cardWrapper}>
-                    <RegionalComparison applicants={applicants} onCountryClick={handleCountryClick} />
+                    <RegionalComparison applicants={applicants} onCountryClick={handleCountryClick} selectedCountry={selectedCountry} />
                 </Box>
             </Box>
 

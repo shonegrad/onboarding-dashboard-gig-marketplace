@@ -1,11 +1,12 @@
 import { Box, Paper, Typography, useTheme } from '@mui/material';
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo } from 'react';
 import * as d3 from 'd3';
 import { Applicant } from '../../types';
 
 interface RegionalComparisonProps {
     applicants: Applicant[];
     onCountryClick?: (country: string) => void;
+    selectedCountry?: string | null;
 }
 
 interface CountryStats {
@@ -16,7 +17,7 @@ interface CountryStats {
     avgTimeToHire: number;
 }
 
-export const RegionalComparison = ({ applicants, onCountryClick }: RegionalComparisonProps) => {
+export const RegionalComparison = ({ applicants, onCountryClick, selectedCountry }: RegionalComparisonProps) => {
     const theme = useTheme();
 
     const countryStats = useMemo((): CountryStats[] => {
@@ -50,23 +51,23 @@ export const RegionalComparison = ({ applicants, onCountryClick }: RegionalCompa
     const maxTotal = Math.max(...countryStats.map(s => s.total), 1);
 
     return (
-        <Paper sx={{ p: 3, borderRadius: 2 }}>
+        <Paper sx={{ p: 2.5, borderRadius: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" fontWeight="bold" gutterBottom>
                 Regional Performance
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Conversion rates and hiring speed by country
             </Typography>
 
             {/* Header */}
             <Box sx={{
                 display: 'grid',
-                gridTemplateColumns: '1.5fr 80px 80px 80px',
-                gap: 2,
+                gridTemplateColumns: '1.5fr 60px 60px 60px',
+                gap: 1.5,
                 pb: 1,
                 borderBottom: 1,
                 borderColor: 'divider',
-                mb: 2
+                mb: 1.5
             }}>
                 <Typography variant="caption" fontWeight="bold" color="text.secondary">
                     COUNTRY
@@ -78,75 +79,86 @@ export const RegionalComparison = ({ applicants, onCountryClick }: RegionalCompa
                     CONV.%
                 </Typography>
                 <Typography variant="caption" fontWeight="bold" color="text.secondary" textAlign="right">
-                    AVG DAYS
+                    DAYS
                 </Typography>
             </Box>
 
-            {/* Rows */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                {countryStats.slice(0, 7).map((stat) => (
-                    <Box
-                        key={stat.country}
-                        onClick={() => onCountryClick?.(stat.country)}
-                        sx={{
-                            display: 'grid',
-                            gridTemplateColumns: '1.5fr 80px 80px 80px',
-                            gap: 2,
-                            alignItems: 'center',
-                            p: 1.5,
-                            borderRadius: 1,
-                            cursor: onCountryClick ? 'pointer' : 'default',
-                            transition: 'background-color 0.2s',
-                            '&:hover': {
-                                bgcolor: 'action.hover'
-                            }
-                        }}
-                    >
-                        {/* Country with mini bar */}
-                        <Box>
-                            <Typography variant="body2" fontWeight={500}>
-                                {stat.country}
-                            </Typography>
-                            <Box sx={{
-                                mt: 0.5,
-                                height: 4,
-                                bgcolor: 'action.hover',
-                                borderRadius: 1,
-                                overflow: 'hidden'
-                            }}>
-                                <Box sx={{
-                                    height: '100%',
-                                    width: `${(stat.total / maxTotal) * 100}%`,
-                                    bgcolor: theme.palette.primary.main,
-                                    borderRadius: 1
-                                }} />
-                            </Box>
-                        </Box>
+            {/* Rows - reduced gap, content hugs */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, flex: 1, overflow: 'auto' }}>
+                {countryStats.slice(0, 8).map((stat) => {
+                    const isSelected = selectedCountry === stat.country;
+                    const hasSelection = !!selectedCountry;
+                    const opacity = hasSelection ? (isSelected ? 1 : 0.3) : 1;
 
-                        <Typography variant="body2" textAlign="right" fontWeight="bold">
-                            {stat.total}
-                        </Typography>
-
-                        <Typography
-                            variant="body2"
-                            textAlign="right"
-                            fontWeight="bold"
+                    return (
+                        <Box
+                            key={stat.country}
+                            onClick={() => onCountryClick?.(stat.country)}
                             sx={{
-                                color: stat.conversionRate >= 50
-                                    ? 'success.main'
-                                    : stat.conversionRate >= 30
-                                        ? 'warning.main'
-                                        : 'error.main'
+                                display: 'grid',
+                                gridTemplateColumns: '1.5fr 60px 60px 60px',
+                                gap: 1.5,
+                                alignItems: 'center',
+                                py: 0.75,
+                                px: 1,
+                                borderRadius: 1,
+                                cursor: onCountryClick ? 'pointer' : 'default',
+                                transition: 'all 0.2s',
+                                opacity,
+                                bgcolor: isSelected ? 'action.selected' : 'transparent',
+                                '&:hover': {
+                                    bgcolor: 'action.hover',
+                                    opacity: 1
+                                }
                             }}
                         >
-                            {stat.conversionRate.toFixed(1)}%
-                        </Typography>
+                            {/* Country with mini bar */}
+                            <Box>
+                                <Typography variant="body2" fontWeight={isSelected ? 600 : 500} fontSize={13}>
+                                    {stat.country}
+                                </Typography>
+                                <Box sx={{
+                                    mt: 0.25,
+                                    height: 3,
+                                    bgcolor: 'action.hover',
+                                    borderRadius: 1,
+                                    overflow: 'hidden'
+                                }}>
+                                    <Box sx={{
+                                        height: '100%',
+                                        width: `${(stat.total / maxTotal) * 100}%`,
+                                        bgcolor: isSelected ? theme.palette.primary.main : theme.palette.primary.light,
+                                        borderRadius: 1
+                                    }} />
+                                </Box>
+                            </Box>
 
-                        <Typography variant="body2" textAlign="right" color="text.secondary">
-                            {stat.avgTimeToHire}d
-                        </Typography>
-                    </Box>
-                ))}
+                            <Typography variant="body2" textAlign="right" fontWeight="bold" fontSize={13}>
+                                {stat.total}
+                            </Typography>
+
+                            <Typography
+                                variant="body2"
+                                textAlign="right"
+                                fontWeight="bold"
+                                fontSize={13}
+                                sx={{
+                                    color: stat.conversionRate >= 50
+                                        ? 'success.main'
+                                        : stat.conversionRate >= 30
+                                            ? 'warning.main'
+                                            : 'error.main'
+                                }}
+                            >
+                                {stat.conversionRate.toFixed(0)}%
+                            </Typography>
+
+                            <Typography variant="body2" textAlign="right" color="text.secondary" fontSize={13}>
+                                {stat.avgTimeToHire}d
+                            </Typography>
+                        </Box>
+                    );
+                })}
             </Box>
         </Paper>
     );
