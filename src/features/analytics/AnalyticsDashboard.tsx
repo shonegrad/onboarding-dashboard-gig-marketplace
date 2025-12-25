@@ -1,12 +1,11 @@
 import { useMemo } from 'react';
-import { Box, Typography, Paper } from '@mui/material';
-import { Work } from '@mui/icons-material';
+import { Box, Typography, Paper, LinearProgress } from '@mui/material';
+import { Work, TrendingUp, TrendingDown, People, Speed, Timeline, CalendarMonth, CheckCircle, Cancel } from '@mui/icons-material';
 import { generateMockApplicants } from '../../data/mockData';
 import { useAnalyticsData } from './useAnalyticsData';
 import { GeographicMap } from './GeographicMap';
 import { ApplicationTrendChart } from './ApplicationTrendChart';
 import { RecruitmentFunnel } from './RecruitmentFunnel';
-import { KPICards } from './KPICards';
 import { getDateRangeFromPreset } from './DateRangeFilter';
 import { PipelineHealth } from './PipelineHealth';
 import { RegionalComparison } from './RegionalComparison';
@@ -19,6 +18,7 @@ import { WeeklyTrends } from './WeeklyTrends';
 import { SkillsCertifications } from './SkillsCertifications';
 import { Applicant } from '../../types';
 import { FilterState } from '../../App';
+import { useTheme } from '@mui/material/styles';
 
 interface AnalyticsDashboardProps {
     applicants?: Applicant[];
@@ -26,12 +26,16 @@ interface AnalyticsDashboardProps {
     onFilterChange?: (filters: Partial<FilterState>) => void;
 }
 
+// Standard card height for consistency
+const CARD_HEIGHT = 380;
+
 export const AnalyticsDashboard = ({
     applicants: propApplicants,
     filters,
     onFilterChange
 }: AnalyticsDashboardProps) => {
     const allApplicants = propApplicants || generateMockApplicants();
+    const theme = useTheme();
 
     const dateRange = filters?.dateRange || '30d';
     const selectedCountry = filters?.selectedCountry || null;
@@ -59,6 +63,46 @@ export const AnalyticsDashboard = ({
 
     const { funnelCounts, mapData, trendData, roleDistribution } = useAnalyticsData(applicants);
 
+    // Calculate enhanced KPIs
+    const kpiData = useMemo(() => {
+        const now = new Date();
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+        const activeStatuses = ['Applied', 'Invited to Interview', 'Interview Scheduled', 'Invited to Training', 'In Training', 'Under Review'];
+        const activePipeline = applicants.filter(a => activeStatuses.includes(a.status)).length;
+        const goLive = applicants.filter(a => a.status === 'Go Live').length;
+        const declined = applicants.filter(a => a.status === 'Declined').length;
+        const conversionRate = applicants.length > 0 ? ((goLive / applicants.length) * 100) : 0;
+
+        const thisWeekApps = applicants.filter(a => new Date(a.appliedDate) >= oneWeekAgo).length;
+        const lastWeekApps = applicants.filter(a => {
+            const date = new Date(a.appliedDate);
+            return date >= twoWeeksAgo && date < oneWeekAgo;
+        }).length;
+        const weeklyChange = lastWeekApps > 0 ? ((thisWeekApps - lastWeekApps) / lastWeekApps * 100) : 0;
+
+        const goLiveApplicants = applicants.filter(a => a.status === 'Go Live');
+        const avgTimeToHire = goLiveApplicants.length > 0
+            ? Math.round(goLiveApplicants.reduce((sum, a) => {
+                const applied = new Date(a.appliedDate);
+                const completed = new Date(a.lastStatusChangeDate);
+                return sum + (completed.getTime() - applied.getTime()) / (1000 * 60 * 60 * 24);
+            }, 0) / goLiveApplicants.length)
+            : 0;
+
+        return {
+            total: applicants.length,
+            activePipeline,
+            goLive,
+            declined,
+            conversionRate,
+            thisWeekApps,
+            weeklyChange,
+            avgTimeToHire
+        };
+    }, [applicants]);
+
     const handleCountryClick = (country: string) => {
         if (onFilterChange) {
             onFilterChange({ selectedCountry: selectedCountry === country ? null : country });
@@ -71,6 +115,14 @@ export const AnalyticsDashboard = ({
         }
     };
 
+    // Common card wrapper style
+    const cardStyle = {
+        height: CARD_HEIGHT,
+        display: 'flex',
+        flexDirection: 'column' as const,
+        overflow: 'hidden'
+    };
+
     return (
         <Box sx={{ p: 3, maxWidth: 1600, margin: '0 auto' }}>
             {/* Header */}
@@ -79,136 +131,191 @@ export const AnalyticsDashboard = ({
                     Intelligence Dashboard
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                    {applicants.length} applicants in view
+                    Real-time overview of {applicants.length} applicants
                 </Typography>
             </Box>
 
-            {/* KPI Cards */}
-            <KPICards applicants={applicants} />
+            {/* Enhanced KPI Summary Row */}
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 3,
+                    mb: 3,
+                    borderRadius: 3,
+                    border: 1,
+                    borderColor: 'divider',
+                    background: `linear-gradient(135deg, ${theme.palette.background.paper} 0%, ${theme.palette.action.hover} 100%)`
+                }}
+            >
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)', lg: 'repeat(8, 1fr)' }, gap: 3 }}>
+                    {/* Total Applicants */}
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+                            <People sx={{ fontSize: 18, color: 'primary.main' }} />
+                            <Typography variant="caption" color="text.secondary">Total</Typography>
+                        </Box>
+                        <Typography variant="h4" fontWeight="bold" color="primary.main">{kpiData.total}</Typography>
+                        <Typography variant="caption" color="text.disabled">applicants</Typography>
+                    </Box>
 
-            {/* Row 1: Map + Regional (2:1 ratio) */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3, mb: 3, alignItems: 'stretch' }}>
-                <Box sx={{ display: 'flex', minHeight: 400 }}>
+                    {/* Active Pipeline */}
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+                            <Timeline sx={{ fontSize: 18, color: 'info.main' }} />
+                            <Typography variant="caption" color="text.secondary">Active</Typography>
+                        </Box>
+                        <Typography variant="h4" fontWeight="bold" color="info.main">{kpiData.activePipeline}</Typography>
+                        <Typography variant="caption" color="text.disabled">in pipeline</Typography>
+                    </Box>
+
+                    {/* Go Live */}
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+                            <CheckCircle sx={{ fontSize: 18, color: 'success.main' }} />
+                            <Typography variant="caption" color="text.secondary">Go Live</Typography>
+                        </Box>
+                        <Typography variant="h4" fontWeight="bold" color="success.main">{kpiData.goLive}</Typography>
+                        <Typography variant="caption" color="text.disabled">hired</Typography>
+                    </Box>
+
+                    {/* Declined */}
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+                            <Cancel sx={{ fontSize: 18, color: 'error.main' }} />
+                            <Typography variant="caption" color="text.secondary">Declined</Typography>
+                        </Box>
+                        <Typography variant="h4" fontWeight="bold" color="error.main">{kpiData.declined}</Typography>
+                        <Typography variant="caption" color="text.disabled">rejected</Typography>
+                    </Box>
+
+                    {/* Conversion Rate */}
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+                            <Speed sx={{ fontSize: 18, color: 'warning.main' }} />
+                            <Typography variant="caption" color="text.secondary">Conversion</Typography>
+                        </Box>
+                        <Typography variant="h4" fontWeight="bold" color="warning.main">{kpiData.conversionRate.toFixed(1)}%</Typography>
+                        <LinearProgress
+                            variant="determinate"
+                            value={Math.min(kpiData.conversionRate, 100)}
+                            sx={{ mt: 0.5, height: 4, borderRadius: 2, bgcolor: 'action.hover' }}
+                        />
+                    </Box>
+
+                    {/* This Week */}
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+                            <CalendarMonth sx={{ fontSize: 18, color: 'secondary.main' }} />
+                            <Typography variant="caption" color="text.secondary">This Week</Typography>
+                        </Box>
+                        <Typography variant="h4" fontWeight="bold" color="secondary.main">{kpiData.thisWeekApps}</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.25 }}>
+                            {kpiData.weeklyChange >= 0 ? (
+                                <TrendingUp sx={{ fontSize: 12, color: 'success.main' }} />
+                            ) : (
+                                <TrendingDown sx={{ fontSize: 12, color: 'error.main' }} />
+                            )}
+                            <Typography variant="caption" sx={{ color: kpiData.weeklyChange >= 0 ? 'success.main' : 'error.main' }}>
+                                {kpiData.weeklyChange > 0 ? '+' : ''}{kpiData.weeklyChange.toFixed(0)}%
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    {/* Avg Time to Hire */}
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+                            <Timeline sx={{ fontSize: 18, color: 'text.secondary' }} />
+                            <Typography variant="caption" color="text.secondary">Avg Time</Typography>
+                        </Box>
+                        <Typography variant="h4" fontWeight="bold">{kpiData.avgTimeToHire}d</Typography>
+                        <Typography variant="caption" color="text.disabled">to hire</Typography>
+                    </Box>
+
+                    {/* Top Role */}
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+                            <Work sx={{ fontSize: 18, color: 'text.secondary' }} />
+                            <Typography variant="caption" color="text.secondary">Top Role</Typography>
+                        </Box>
+                        <Typography variant="body1" fontWeight="bold" noWrap sx={{ maxWidth: 100, mx: 'auto' }}>
+                            {roleDistribution[0]?.name || 'N/A'}
+                        </Typography>
+                        <Typography variant="caption" color="text.disabled">
+                            {roleDistribution[0]?.value || 0} apps
+                        </Typography>
+                    </Box>
+                </Box>
+            </Paper>
+
+            {/* All cards in 50/50 grid with uniform height */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' }, gap: 3 }}>
+                {/* Card 1: Geographic Map */}
+                <Box sx={cardStyle}>
                     <GeographicMap
                         data={mapData}
                         selectedCountry={selectedCountry}
                         onCountryClick={handleCountryClick}
                     />
                 </Box>
-                <Box sx={{ display: 'flex', minHeight: 400 }}>
+
+                {/* Card 2: Regional Comparison */}
+                <Box sx={cardStyle}>
                     <RegionalComparison applicants={applicants} onCountryClick={handleCountryClick} />
                 </Box>
-            </Box>
 
-            {/* Row 2: Funnel + Pipeline (same 2:1 ratio to align with row 1) */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3, mb: 3, alignItems: 'stretch' }}>
-                <Box sx={{ display: 'flex' }}>
+                {/* Card 3: Recruitment Funnel */}
+                <Box sx={cardStyle}>
                     <RecruitmentFunnel
                         data={funnelCounts}
                         onStageClick={handleStageClick}
                         selectedStage={selectedStage}
                     />
                 </Box>
-                <Box sx={{ display: 'flex' }}>
+
+                {/* Card 4: Pipeline Health */}
+                <Box sx={cardStyle}>
                     <PipelineHealth applicants={applicants} onStageClick={handleStageClick} />
                 </Box>
-            </Box>
 
-            {/* Row 3: Trends (same 2:1 ratio) */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3, mb: 3, alignItems: 'stretch' }}>
-                <Box sx={{ display: 'flex' }}>
+                {/* Card 5: Application Trend */}
+                <Box sx={cardStyle}>
                     <ApplicationTrendChart data={trendData} />
                 </Box>
-                <Box sx={{ display: 'flex' }}>
+
+                {/* Card 6: Weekly Trends */}
+                <Box sx={cardStyle}>
                     <WeeklyTrends applicants={applicants} />
                 </Box>
-            </Box>
 
-            {/* Row 4: Insight Cards (4-column) */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 3, mb: 3 }}>
-                <TimeToHireChart applicants={applicants} />
-                <ExperienceBreakdown applicants={applicants} />
-                <RatingDistribution applicants={applicants} />
-                <SkillsCertifications applicants={applicants} />
-            </Box>
+                {/* Card 7: Time to Hire */}
+                <Box sx={cardStyle}>
+                    <TimeToHireChart applicants={applicants} />
+                </Box>
 
-            {/* Row 5: Source + Activity + Top Roles (3-column) */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
-                <ApplicationSource applicants={applicants} />
-                <RecentActivity applicants={allApplicants} limit={6} />
-                <Paper
-                    elevation={0}
-                    sx={{
-                        p: 2.5,
-                        height: '100%',
-                        borderRadius: 3,
-                        border: 1,
-                        borderColor: 'divider',
-                        transition: 'box-shadow 0.3s ease',
-                        '&:hover': { boxShadow: 4 }
-                    }}
-                >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                        <Box sx={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 2,
-                            bgcolor: 'success.main',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'success.contrastText'
-                        }}>
-                            <Work fontSize="small" />
-                        </Box>
-                        <Typography variant="subtitle1" fontWeight="bold">
-                            Top Roles
-                        </Typography>
-                    </Box>
-                    <Box component="ul" sx={{ p: 0, m: 0, listStyle: 'none' }}>
-                        {roleDistribution.slice(0, 5).map((role, i) => (
-                            <Box component="li" key={role.name} sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                py: 1,
-                                borderBottom: i < 4 ? '1px solid' : 'none',
-                                borderColor: 'divider'
-                            }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Box sx={{
-                                        width: 20,
-                                        height: 20,
-                                        borderRadius: '50%',
-                                        bgcolor: i === 0 ? 'warning.main' : i === 1 ? 'grey.400' : i === 2 ? 'warning.dark' : 'action.selected',
-                                        color: i < 3 ? 'warning.contrastText' : 'text.primary',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: 10,
-                                        fontWeight: 'bold'
-                                    }}>
-                                        {i + 1}
-                                    </Box>
-                                    <Typography
-                                        variant="caption"
-                                        sx={{
-                                            maxWidth: 120,
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap'
-                                        }}
-                                    >
-                                        {role.name}
-                                    </Typography>
-                                </Box>
-                                <Typography variant="caption" fontWeight="bold" color="primary.main">
-                                    {role.value}
-                                </Typography>
-                            </Box>
-                        ))}
-                    </Box>
-                </Paper>
+                {/* Card 8: Experience Breakdown */}
+                <Box sx={cardStyle}>
+                    <ExperienceBreakdown applicants={applicants} />
+                </Box>
+
+                {/* Card 9: Rating Distribution */}
+                <Box sx={cardStyle}>
+                    <RatingDistribution applicants={applicants} />
+                </Box>
+
+                {/* Card 10: Skills & Certifications */}
+                <Box sx={cardStyle}>
+                    <SkillsCertifications applicants={applicants} />
+                </Box>
+
+                {/* Card 11: Application Source */}
+                <Box sx={cardStyle}>
+                    <ApplicationSource applicants={applicants} />
+                </Box>
+
+                {/* Card 12: Recent Activity */}
+                <Box sx={cardStyle}>
+                    <RecentActivity applicants={allApplicants} limit={8} />
+                </Box>
             </Box>
         </Box>
     );
