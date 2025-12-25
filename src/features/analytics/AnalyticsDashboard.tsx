@@ -281,21 +281,8 @@ export const AnalyticsDashboard = ({
                 </Box>
             </Box>
 
-            {/* Row 3: Weekly Trends + App Source + Recent Activity (3 columns) */}
-            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' } }}>
-                <Box sx={cardWrapper}>
-                    <WeeklyTrends applicants={applicants} />
-                </Box>
-                <Box sx={cardWrapper}>
-                    <ApplicationSource applicants={applicants} />
-                </Box>
-                <Box sx={cardWrapper}>
-                    <RecentActivity applicants={allApplicants} limit={8} />
-                </Box>
-            </Box>
-
-            {/* Row 4: Time to Hire, Experience, Rating, Skills (4 columns) */}
-            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, mb: 0 }}>
+            {/* Row 3: Time to Hire, Experience, Rating, Skills (4 columns) */}
+            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' } }}>
                 <Box sx={cardWrapper}>
                     <TimeToHireChart applicants={applicants} />
                 </Box>
@@ -309,7 +296,21 @@ export const AnalyticsDashboard = ({
                     <SkillsCertifications applicants={applicants} />
                 </Box>
             </Box>
+
+            {/* Row 4: Weekly Trends + App Source + Recent Activity (3 columns) */}
+            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, mb: 0 }}>
+                <Box sx={cardWrapper}>
+                    <WeeklyTrends applicants={applicants} />
+                </Box>
+                <Box sx={cardWrapper}>
+                    <ApplicationSource applicants={applicants} />
+                </Box>
+                <Box sx={cardWrapper}>
+                    <RecentActivity applicants={allApplicants} limit={8} />
+                </Box>
+            </Box>
         </Box>
     );
 };
+
 
