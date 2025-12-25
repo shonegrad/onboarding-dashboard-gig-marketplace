@@ -86,18 +86,22 @@ export const AnalyticsDashboard = ({
             {/* KPI Cards */}
             <KPICards applicants={applicants} />
 
-            {/* Row 1: Map + Regional (no border wrapper) */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3, mb: 3 }}>
-                <GeographicMap
-                    data={mapData}
-                    selectedCountry={selectedCountry}
-                    onCountryClick={handleCountryClick}
-                />
-                <RegionalComparison applicants={applicants} onCountryClick={handleCountryClick} />
+            {/* Row 1: Map + Regional (2:1 ratio) */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3, mb: 3, alignItems: 'stretch' }}>
+                <Box sx={{ display: 'flex', minHeight: 400 }}>
+                    <GeographicMap
+                        data={mapData}
+                        selectedCountry={selectedCountry}
+                        onCountryClick={handleCountryClick}
+                    />
+                </Box>
+                <Box sx={{ display: 'flex', minHeight: 400 }}>
+                    <RegionalComparison applicants={applicants} onCountryClick={handleCountryClick} />
+                </Box>
             </Box>
 
-            {/* Row 2: Funnel + Pipeline (equal heights) */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 3 }}>
+            {/* Row 2: Funnel + Pipeline (same 2:1 ratio to align with row 1) */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3, mb: 3, alignItems: 'stretch' }}>
                 <Box sx={{ display: 'flex' }}>
                     <RecruitmentFunnel
                         data={funnelCounts}
@@ -110,10 +114,14 @@ export const AnalyticsDashboard = ({
                 </Box>
             </Box>
 
-            {/* Row 3: Trends (2:1 ratio) */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3, mb: 3 }}>
-                <ApplicationTrendChart data={trendData} />
-                <WeeklyTrends applicants={applicants} />
+            {/* Row 3: Trends (same 2:1 ratio) */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3, mb: 3, alignItems: 'stretch' }}>
+                <Box sx={{ display: 'flex' }}>
+                    <ApplicationTrendChart data={trendData} />
+                </Box>
+                <Box sx={{ display: 'flex' }}>
+                    <WeeklyTrends applicants={applicants} />
+                </Box>
             </Box>
 
             {/* Row 4: Insight Cards (4-column) */}

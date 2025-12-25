@@ -21,7 +21,7 @@ export interface FilterState {
 export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('applicants');
+  const [activeTab, setActiveTab] = useState('analytics');
   const [applicants, setApplicants] = useState<Applicant[]>(generateMockApplicants());
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
 

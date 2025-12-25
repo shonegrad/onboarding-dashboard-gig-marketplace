@@ -38,8 +38,8 @@ export function AppShell({
     const hasActiveFilters = filters?.selectedCountry || filters?.selectedStage;
 
     const navItems = [
-        { id: 'applicants', label: 'Applicants', icon: <People sx={{ fontSize: 18 }} /> },
         { id: 'analytics', label: 'Analytics', icon: <Dashboard sx={{ fontSize: 18 }} /> },
+        { id: 'applicants', label: 'Applicants', icon: <People sx={{ fontSize: 18 }} /> },
     ];
 
     return (
