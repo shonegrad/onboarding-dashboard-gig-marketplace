@@ -29,6 +29,14 @@ export const getNextStage = (current: OnboardingStatus): OnboardingStatus | null
     return null;
 };
 
+export const getPreviousStage = (current: OnboardingStatus): OnboardingStatus | null => {
+    const idx = PIPELINE_STAGES.indexOf(current);
+    if (idx > 0) {
+        return PIPELINE_STAGES[idx - 1];
+    }
+    return null;
+};
+
 export const isEndState = (status: OnboardingStatus): boolean => {
     return status === 'Declined' || status === 'Go Live' || status === 'Under Review';
 };
