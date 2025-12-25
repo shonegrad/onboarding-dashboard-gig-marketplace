@@ -148,7 +148,7 @@ export const WeeklyTrends = ({ applicants }: WeeklyTrendsProps) => {
             {/* Header Row */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Timeline sx={{ fontSize: 20, color: 'info.main' }} />
+                    <Timeline sx={{ fontSize: 18, color: 'text.secondary' }} />
                     <Typography variant="subtitle2" fontWeight="bold">Weekly Trends</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 1 }}>
                         {trend >= 0 ? <TrendingUp sx={{ fontSize: 14, color: 'success.main' }} /> : <TrendingDown sx={{ fontSize: 14, color: 'error.main' }} />}

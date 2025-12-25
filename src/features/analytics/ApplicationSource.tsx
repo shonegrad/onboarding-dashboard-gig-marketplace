@@ -95,7 +95,7 @@ export const ApplicationSource = ({ applicants }: ApplicationSourceProps) => {
             {/* Header */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Share sx={{ fontSize: 20, color: 'primary.main' }} />
+                    <Share sx={{ fontSize: 18, color: 'text.secondary' }} />
                     <Typography variant="subtitle2" fontWeight="bold">Application Source</Typography>
                 </Box>
                 <Typography variant="caption" color="text.secondary">{total} total</Typography>
