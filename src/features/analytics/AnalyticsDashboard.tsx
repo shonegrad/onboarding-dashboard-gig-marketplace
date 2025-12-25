@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Box, Typography, Paper } from '@mui/material';
-import { Work } from '@mui/icons-material';
+import { Work, Public, Funnel } from '@mui/icons-material';
 import { generateMockApplicants } from '../../data/mockData';
 import { useAnalyticsData } from './useAnalyticsData';
 import { GeographicMap } from './GeographicMap';
@@ -15,7 +15,7 @@ import { ExperienceBreakdown } from './ExperienceBreakdown';
 import { RatingDistribution } from './RatingDistribution';
 import { RecentActivity } from './RecentActivity';
 import { ApplicationSource } from './ApplicationSource';
-import { WeeklyComparison } from './WeeklyComparison';
+import { WeeklyTrends } from './WeeklyTrends';
 import { SkillsCertifications } from './SkillsCertifications';
 import { Applicant } from '../../types';
 import { FilterState } from '../../App';
@@ -78,7 +78,7 @@ export const AnalyticsDashboard = ({
 
     return (
         <Box sx={{ p: 3, maxWidth: 1600, margin: '0 auto' }}>
-            {/* Header - simplified since filters are in navbar */}
+            {/* Header */}
             <Box sx={{ mb: 3 }}>
                 <Typography variant="h4" fontWeight="bold" gutterBottom>
                     Intelligence Dashboard
@@ -91,35 +91,75 @@ export const AnalyticsDashboard = ({
             {/* KPI Cards */}
             <KPICards applicants={applicants} />
 
-            {/* Row 1: Map and Pipeline Health */}
+            {/* Section 1: Geographic Performance (Map + Regional) */}
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 2,
+                    mb: 3,
+                    borderRadius: 3,
+                    border: 1,
+                    borderColor: 'divider',
+                    bgcolor: 'background.default'
+                }}
+            >
+                <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Public color="primary" /> Geographic Performance
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                    <Box sx={{ flex: '2 1 500px', minWidth: 0 }}>
+                        <GeographicMap
+                            data={mapData}
+                            selectedCountry={selectedCountry}
+                            onCountryClick={handleCountryClick}
+                        />
+                    </Box>
+                    <Box sx={{ flex: '1 1 350px', minWidth: 300 }}>
+                        <RegionalComparison applicants={applicants} onCountryClick={handleCountryClick} />
+                    </Box>
+                </Box>
+            </Paper>
+
+            {/* Section 2: Pipeline & Conversion (Funnel + Health) */}
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 2,
+                    mb: 3,
+                    borderRadius: 3,
+                    border: 1,
+                    borderColor: 'divider',
+                    bgcolor: 'background.default'
+                }}
+            >
+                <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    Pipeline & Conversion
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, alignItems: 'stretch' }}>
+                    <Box sx={{ flex: '1 1 300px', minWidth: 280, display: 'flex' }}>
+                        <RecruitmentFunnel
+                            data={funnelCounts}
+                            onStageClick={handleStageClick}
+                            selectedStage={selectedStage}
+                        />
+                    </Box>
+                    <Box sx={{ flex: '1 1 350px', minWidth: 300, display: 'flex' }}>
+                        <PipelineHealth applicants={applicants} onStageClick={handleStageClick} />
+                    </Box>
+                </Box>
+            </Paper>
+
+            {/* Section 3: Trends */}
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3 }}>
                 <Box sx={{ flex: '2 1 500px', minWidth: 0 }}>
-                    <GeographicMap
-                        data={mapData}
-                        selectedCountry={selectedCountry}
-                        onCountryClick={handleCountryClick}
-                    />
-                </Box>
-                <Box sx={{ flex: '1 1 350px', minWidth: 300 }}>
-                    <PipelineHealth applicants={applicants} onStageClick={handleStageClick} />
-                </Box>
-            </Box>
-
-            {/* Row 2: Trend Chart and Funnel */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3, alignItems: 'stretch' }}>
-                <Box sx={{ flex: '2 1 400px', minWidth: 0, display: 'flex' }}>
                     <ApplicationTrendChart data={trendData} />
                 </Box>
-                <Box sx={{ flex: '1 1 280px', minWidth: 280, display: 'flex' }}>
-                    <RecruitmentFunnel
-                        data={funnelCounts}
-                        onStageClick={handleStageClick}
-                        selectedStage={selectedStage}
-                    />
+                <Box sx={{ flex: '1 1 400px', minWidth: 350 }}>
+                    <WeeklyTrends applicants={applicants} />
                 </Box>
             </Box>
 
-            {/* Row 3: Expandable Insight Cards */}
+            {/* Section 4: Expandable Insight Cards */}
             <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
                 Detailed Insights
             </Typography>
@@ -130,21 +170,11 @@ export const AnalyticsDashboard = ({
                 <SkillsCertifications applicants={applicants} />
             </Box>
 
-            {/* Row 4: Regional, Source, Weekly, Activity */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3 }}>
-                <Box sx={{ flex: '2 1 400px', minWidth: 0 }}>
-                    <RegionalComparison applicants={applicants} onCountryClick={handleCountryClick} />
-                </Box>
-                <Box sx={{ flex: '1 1 250px', minWidth: 250 }}>
+            {/* Section 5: Sources, Activity, Top Roles */}
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                <Box sx={{ flex: '1 1 280px', minWidth: 250 }}>
                     <ApplicationSource applicants={applicants} />
                 </Box>
-                <Box sx={{ flex: '1 1 250px', minWidth: 250 }}>
-                    <WeeklyComparison applicants={applicants} />
-                </Box>
-            </Box>
-
-            {/* Row 5: Recent Activity and Top Roles */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
                 <Box sx={{ flex: '1 1 350px', minWidth: 300 }}>
                     <RecentActivity applicants={allApplicants} limit={6} />
                 </Box>

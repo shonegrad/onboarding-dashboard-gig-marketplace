@@ -155,10 +155,22 @@ export const KPICards = ({ applicants, dateRange }: KPICardsProps) => {
         ];
     }, [applicants, theme]);
 
-    const getTrendIcon = (trend: number) => {
-        if (trend > 0) return <TrendingUp sx={{ fontSize: 16, color: 'success.main' }} />;
-        if (trend < 0) return <TrendingDown sx={{ fontSize: 16, color: 'error.main' }} />;
-        return <TrendingFlat sx={{ fontSize: 16, color: 'text.secondary' }} />;
+    const getTrendStatus = (trend: number, title: string) => {
+        // For time-to-hire, negative is good (faster)
+        const isTimeMetric = title.includes('Time');
+        const isPositive = isTimeMetric ? trend < 0 : trend > 0;
+        const isNegative = isTimeMetric ? trend > 0 : trend < 0;
+
+        if (Math.abs(trend) < 1) {
+            return { label: 'Stable', color: 'text.secondary', icon: <TrendingFlat sx={{ fontSize: 14 }} /> };
+        }
+        if (isPositive) {
+            return { label: 'Trending Up', color: 'success.main', icon: <TrendingUp sx={{ fontSize: 14 }} /> };
+        }
+        if (isNegative) {
+            return { label: 'Trending Down', color: 'error.main', icon: <TrendingDown sx={{ fontSize: 14 }} /> };
+        }
+        return { label: 'Stable', color: 'text.secondary', icon: <TrendingFlat sx={{ fontSize: 14 }} /> };
     };
 
     return (
@@ -208,15 +220,25 @@ export const KPICards = ({ applicants, dateRange }: KPICardsProps) => {
                         {kpi.value}
                     </Typography>
 
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        {getTrendIcon(kpi.trend)}
-                        <Typography variant="caption" color={kpi.trend > 0 ? 'success.main' : kpi.trend < 0 ? 'error.main' : 'text.secondary'}>
-                            {kpi.trend > 0 ? '+' : ''}{kpi.trend.toFixed(1)}%
-                        </Typography>
-                        <Typography variant="caption" color="text.disabled" sx={{ ml: 0.5 }}>
-                            {kpi.trendLabel}
-                        </Typography>
-                    </Box>
+                    {(() => {
+                        const status = getTrendStatus(kpi.trend, kpi.title);
+                        return (
+                            <Box sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                px: 1,
+                                py: 0.25,
+                                borderRadius: 2,
+                                bgcolor: `${status.color}15`,
+                            }}>
+                                {status.icon}
+                                <Typography variant="caption" fontWeight={500} sx={{ color: status.color }}>
+                                    {status.label}
+                                </Typography>
+                            </Box>
+                        );
+                    })()}
 
                     {/* Sparkline */}
                     <Box sx={{ mt: 'auto', pt: 1 }}>
