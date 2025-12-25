@@ -1,8 +1,7 @@
-import { useMemo, useEffect, useRef } from 'react';
-import * as d3 from 'd3';
+import { useMemo } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Box, Typography, Paper } from '@mui/material';
-import { CompareArrows, TrendingUp, TrendingDown } from '@mui/icons-material';
+import { Box, Typography, Paper, LinearProgress, Chip, Tooltip } from '@mui/material';
+import { CompareArrows, TrendingUp, TrendingDown, TrendingFlat, ArrowUpward, ArrowDownward } from '@mui/icons-material';
 import { Applicant } from '../../types';
 
 interface WeeklyComparisonProps {
@@ -14,12 +13,13 @@ interface WeekData {
     thisWeek: number;
     lastWeek: number;
     change: number;
+    changePercent: number;
     isPositive: boolean;
+    color: string;
 }
 
 export const WeeklyComparison = ({ applicants }: WeeklyComparisonProps) => {
     const theme = useTheme();
-    const chartRef = useRef<SVGSVGElement>(null);
 
     const weekData = useMemo((): WeekData[] => {
         const now = new Date();
@@ -55,95 +55,58 @@ export const WeeklyComparison = ({ applicants }: WeeklyComparisonProps) => {
                 metric: 'Applications',
                 thisWeek: thisWeekApps.length,
                 lastWeek: lastWeekApps.length,
-                change: calcChange(thisWeekApps.length, lastWeekApps.length),
-                isPositive: thisWeekApps.length >= lastWeekApps.length
+                change: thisWeekApps.length - lastWeekApps.length,
+                changePercent: calcChange(thisWeekApps.length, lastWeekApps.length),
+                isPositive: thisWeekApps.length >= lastWeekApps.length,
+                color: theme.palette.primary.main
             },
             {
                 metric: 'Go Live',
                 thisWeek: thisWeekGoLive,
                 lastWeek: lastWeekGoLive,
-                change: calcChange(thisWeekGoLive, lastWeekGoLive),
-                isPositive: thisWeekGoLive >= lastWeekGoLive
+                change: thisWeekGoLive - lastWeekGoLive,
+                changePercent: calcChange(thisWeekGoLive, lastWeekGoLive),
+                isPositive: thisWeekGoLive >= lastWeekGoLive,
+                color: theme.palette.success.main
             },
             {
                 metric: 'Interviews',
                 thisWeek: thisWeekInterviews,
                 lastWeek: lastWeekInterviews,
-                change: calcChange(thisWeekInterviews, lastWeekInterviews),
-                isPositive: thisWeekInterviews >= lastWeekInterviews
+                change: thisWeekInterviews - lastWeekInterviews,
+                changePercent: calcChange(thisWeekInterviews, lastWeekInterviews),
+                isPositive: thisWeekInterviews >= lastWeekInterviews,
+                color: theme.palette.info.main
             },
             {
                 metric: 'Declined',
                 thisWeek: thisWeekDeclined,
                 lastWeek: lastWeekDeclined,
-                change: calcChange(thisWeekDeclined, lastWeekDeclined),
-                isPositive: thisWeekDeclined <= lastWeekDeclined // Lower is better for declines
+                change: thisWeekDeclined - lastWeekDeclined,
+                changePercent: calcChange(thisWeekDeclined, lastWeekDeclined),
+                isPositive: thisWeekDeclined <= lastWeekDeclined, // Lower is better
+                color: theme.palette.error.main
             }
         ];
-    }, [applicants]);
+    }, [applicants, theme]);
 
-    useEffect(() => {
-        if (!chartRef.current) return;
+    // Calculate overall trend
+    const overallTrend = useMemo(() => {
+        const positiveCount = weekData.filter(d => d.isPositive).length;
+        if (positiveCount >= 3) return 'up';
+        if (positiveCount <= 1) return 'down';
+        return 'flat';
+    }, [weekData]);
 
-        d3.select(chartRef.current).selectAll("*").remove();
-
-        const width = 200;
-        const height = 80;
-        const margin = { top: 10, right: 10, bottom: 20, left: 10 };
-        const innerWidth = width - margin.left - margin.right;
-        const innerHeight = height - margin.top - margin.bottom;
-
-        const svg = d3.select(chartRef.current)
-            .attr("width", width)
-            .attr("height", height)
-            .append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
-
-        const data = weekData.slice(0, 3);
-        const barWidth = innerWidth / data.length - 10;
-
-        const y = d3.scaleLinear()
-            .domain([0, Math.max(...data.flatMap(d => [d.thisWeek, d.lastWeek]), 10)])
-            .range([innerHeight, 0]);
-
-        data.forEach((d, i) => {
-            const x = i * (barWidth + 10);
-
-            // Last week bar (background)
-            svg.append("rect")
-                .attr("x", x)
-                .attr("y", y(d.lastWeek))
-                .attr("width", barWidth / 2 - 2)
-                .attr("height", innerHeight - y(d.lastWeek))
-                .attr("fill", theme.palette.action.hover)
-                .attr("rx", 3);
-
-            // This week bar
-            svg.append("rect")
-                .attr("x", x + barWidth / 2)
-                .attr("y", y(d.thisWeek))
-                .attr("width", barWidth / 2 - 2)
-                .attr("height", innerHeight - y(d.thisWeek))
-                .attr("fill", d.isPositive ? theme.palette.success.main : theme.palette.error.main)
-                .attr("rx", 3);
-
-            // Label
-            svg.append("text")
-                .attr("x", x + barWidth / 2)
-                .attr("y", innerHeight + 14)
-                .attr("text-anchor", "middle")
-                .attr("fill", theme.palette.text.secondary)
-                .attr("font-size", 9)
-                .text(d.metric.slice(0, 4));
-        });
-
-    }, [weekData, theme]);
+    const TrendIcon = overallTrend === 'up' ? TrendingUp : overallTrend === 'down' ? TrendingDown : TrendingFlat;
+    const trendColor = overallTrend === 'up' ? 'success.main' : overallTrend === 'down' ? 'error.main' : 'warning.main';
+    const trendText = overallTrend === 'up' ? 'Trending Up' : overallTrend === 'down' ? 'Trending Down' : 'Stable';
 
     return (
         <Paper
             elevation={0}
             sx={{
-                p: 3,
+                p: 2.5,
                 borderRadius: 3,
                 border: 1,
                 borderColor: 'divider',
@@ -152,69 +115,136 @@ export const WeeklyComparison = ({ applicants }: WeeklyComparisonProps) => {
                 '&:hover': { boxShadow: 4 }
             }}
         >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                <Box sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 2,
-                    bgcolor: 'info.main',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'info.contrastText'
-                }}>
-                    <CompareArrows fontSize="small" />
-                </Box>
-                <Box>
-                    <Typography variant="subtitle1" fontWeight="bold">
-                        Weekly Comparison
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        This week vs last week
-                    </Typography>
-                </Box>
-            </Box>
-
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                <svg ref={chartRef}></svg>
-            </Box>
-
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {weekData.map((item) => (
-                    <Box
-                        key={item.metric}
-                        sx={{
-                            flex: '1 1 45%',
-                            p: 1,
-                            borderRadius: 1,
-                            bgcolor: 'action.hover',
-                            textAlign: 'center'
-                        }}
-                    >
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
-                            {item.metric}
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-                            <Typography variant="body2" fontWeight="bold">
-                                {item.thisWeek}
-                            </Typography>
-                            {item.isPositive ? (
-                                <TrendingUp sx={{ fontSize: 14, color: 'success.main' }} />
-                            ) : (
-                                <TrendingDown sx={{ fontSize: 14, color: 'error.main' }} />
-                            )}
-                            <Typography
-                                variant="caption"
-                                sx={{
-                                    fontSize: 10,
-                                    color: item.isPositive ? 'success.main' : 'error.main'
-                                }}
-                            >
-                                {item.change > 0 ? '+' : ''}{item.change}%
-                            </Typography>
-                        </Box>
+            {/* Header */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 2,
+                        bgcolor: 'info.main',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'info.contrastText'
+                    }}>
+                        <CompareArrows fontSize="small" />
                     </Box>
-                ))}
+                    <Typography variant="subtitle1" fontWeight="bold">
+                        Weekly Trends
+                    </Typography>
+                </Box>
+                <Chip
+                    icon={<TrendIcon sx={{ fontSize: 16 }} />}
+                    label={trendText}
+                    size="small"
+                    sx={{
+                        bgcolor: `${trendColor}`,
+                        color: 'white',
+                        fontWeight: 500,
+                        '& .MuiChip-icon': { color: 'inherit' }
+                    }}
+                />
+            </Box>
+
+            {/* Metrics */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                {weekData.map((item) => {
+                    const maxVal = Math.max(item.thisWeek, item.lastWeek, 1);
+                    const thisWeekProgress = (item.thisWeek / maxVal) * 100;
+                    const lastWeekProgress = (item.lastWeek / maxVal) * 100;
+
+                    return (
+                        <Tooltip
+                            key={item.metric}
+                            title={`This week: ${item.thisWeek} | Last week: ${item.lastWeek}`}
+                            placement="top"
+                        >
+                            <Box sx={{
+                                p: 1.5,
+                                borderRadius: 2,
+                                bgcolor: 'action.hover',
+                                transition: 'all 0.2s',
+                                '&:hover': { bgcolor: 'action.selected' }
+                            }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                                    <Typography variant="caption" fontWeight={500} color="text.secondary">
+                                        {item.metric}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        {item.change !== 0 && (
+                                            item.isPositive ? (
+                                                <ArrowUpward sx={{ fontSize: 12, color: 'success.main' }} />
+                                            ) : (
+                                                <ArrowDownward sx={{ fontSize: 12, color: 'error.main' }} />
+                                            )
+                                        )}
+                                        <Typography
+                                            variant="caption"
+                                            fontWeight={600}
+                                            sx={{ color: item.change === 0 ? 'text.secondary' : item.isPositive ? 'success.main' : 'error.main' }}
+                                        >
+                                            {item.change > 0 ? '+' : ''}{item.change} ({item.changePercent > 0 ? '+' : ''}{item.changePercent}%)
+                                        </Typography>
+                                    </Box>
+                                </Box>
+
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography variant="h6" fontWeight="bold" sx={{ minWidth: 24 }}>
+                                        {item.thisWeek}
+                                    </Typography>
+                                    <Box sx={{ flex: 1, position: 'relative' }}>
+                                        {/* Last week bar (background) */}
+                                        <LinearProgress
+                                            variant="determinate"
+                                            value={lastWeekProgress}
+                                            sx={{
+                                                height: 8,
+                                                borderRadius: 4,
+                                                bgcolor: 'action.disabledBackground',
+                                                position: 'absolute',
+                                                width: '100%',
+                                                '& .MuiLinearProgress-bar': {
+                                                    bgcolor: 'action.disabled',
+                                                    borderRadius: 4
+                                                }
+                                            }}
+                                        />
+                                        {/* This week bar */}
+                                        <LinearProgress
+                                            variant="determinate"
+                                            value={thisWeekProgress}
+                                            sx={{
+                                                height: 8,
+                                                borderRadius: 4,
+                                                bgcolor: 'transparent',
+                                                '& .MuiLinearProgress-bar': {
+                                                    bgcolor: item.color,
+                                                    borderRadius: 4
+                                                }
+                                            }}
+                                        />
+                                    </Box>
+                                    <Typography variant="caption" color="text.disabled" sx={{ minWidth: 20, textAlign: 'right' }}>
+                                        {item.lastWeek}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Tooltip>
+                    );
+                })}
+            </Box>
+
+            {/* Legend */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mt: 2, pt: 1.5, borderTop: 1, borderColor: 'divider' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box sx={{ width: 12, height: 4, borderRadius: 2, bgcolor: 'primary.main' }} />
+                    <Typography variant="caption" color="text.secondary">This Week</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box sx={{ width: 12, height: 4, borderRadius: 2, bgcolor: 'action.disabled' }} />
+                    <Typography variant="caption" color="text.secondary">Last Week</Typography>
+                </Box>
             </Box>
         </Paper>
     );
