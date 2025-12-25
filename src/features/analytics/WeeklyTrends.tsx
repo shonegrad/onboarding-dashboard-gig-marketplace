@@ -1,8 +1,8 @@
 import { useMemo, useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { useTheme } from '@mui/material/styles';
-import { Box, Typography, Paper, ToggleButtonGroup, ToggleButton } from '@mui/material';
-import { Timeline, TrendingUp, TrendingDown, ShowChart, BarChart } from '@mui/icons-material';
+import { Box, Typography, Paper, Chip, Divider } from '@mui/material';
+import { TrendingUp, TrendingDown, CalendarToday } from '@mui/icons-material';
 import { Applicant } from '../../types';
 
 interface WeeklyTrendsProps {
@@ -11,22 +11,23 @@ interface WeeklyTrendsProps {
 
 interface WeekPoint {
     weekStart: Date;
+    weekEnd: Date;
     weekLabel: string;
+    dateLabel: string;
     applications: number;
     goLive: number;
     interviews: number;
     declined: number;
 }
 
-type ChartType = 'line' | 'area' | 'bar';
 type MetricType = 'applications' | 'goLive' | 'interviews' | 'declined';
 
 export const WeeklyTrends = ({ applicants }: WeeklyTrendsProps) => {
     const theme = useTheme();
     const chartRef = useRef<SVGSVGElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [chartType, setChartType] = useState<ChartType>('area');
     const [selectedMetric, setSelectedMetric] = useState<MetricType>('applications');
+    const [hoveredWeek, setHoveredWeek] = useState<WeekPoint | null>(null);
 
     const weeklyData = useMemo((): WeekPoint[] => {
         const now = new Date();
@@ -41,9 +42,14 @@ export const WeeklyTrends = ({ applicants }: WeeklyTrendsProps) => {
                 return date >= weekStart && date < weekEnd;
             });
 
+            const month = weekStart.toLocaleDateString('en-US', { month: 'short' });
+            const day = weekStart.getDate();
+
             weeks.push({
                 weekStart,
-                weekLabel: `W${8 - i}`,
+                weekEnd,
+                weekLabel: i === 0 ? 'Now' : i === 1 ? 'Last' : `${month} ${day}`,
+                dateLabel: `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
                 applications: weekApps.length,
                 goLive: weekApps.filter(a => a.status === 'Go Live').length,
                 interviews: weekApps.filter(a =>
@@ -56,36 +62,34 @@ export const WeeklyTrends = ({ applicants }: WeeklyTrendsProps) => {
         return weeks;
     }, [applicants]);
 
-    const metrics: { key: MetricType; label: string; color: string; abbr: string }[] = [
-        { key: 'applications', label: 'Apps', color: theme.palette.primary.main, abbr: 'Apps' },
-        { key: 'goLive', label: 'Go Live', color: theme.palette.success.main, abbr: 'Live' },
-        { key: 'interviews', label: 'Interviews', color: theme.palette.info.main, abbr: 'Int' },
-        { key: 'declined', label: 'Declined', color: theme.palette.error.main, abbr: 'Dec' },
+    const metrics: { key: MetricType; label: string; color: string }[] = [
+        { key: 'applications', label: 'Applications', color: theme.palette.primary.main },
+        { key: 'goLive', label: 'Hired', color: theme.palette.success.main },
+        { key: 'interviews', label: 'Interviews', color: theme.palette.info.main },
+        { key: 'declined', label: 'Declined', color: theme.palette.error.main },
     ];
 
     const currentMetric = metrics.find(m => m.key === selectedMetric)!;
 
-    const trend = useMemo(() => {
-        if (weeklyData.length < 2) return 0;
-        const recent = weeklyData[weeklyData.length - 1][selectedMetric];
-        const previous = weeklyData[weeklyData.length - 2][selectedMetric];
-        if (previous === 0) return recent > 0 ? 100 : 0;
-        return Math.round(((recent - previous) / previous) * 100);
-    }, [weeklyData, selectedMetric]);
-
+    // Stats calculations
     const thisWeek = weeklyData[weeklyData.length - 1]?.[selectedMetric] || 0;
-    const avg = Math.round(weeklyData.reduce((sum, w) => sum + w[selectedMetric], 0) / weeklyData.length);
+    const lastWeek = weeklyData[weeklyData.length - 2]?.[selectedMetric] || 0;
+    const trend = lastWeek > 0 ? Math.round(((thisWeek - lastWeek) / lastWeek) * 100) : (thisWeek > 0 ? 100 : 0);
+    const total = weeklyData.reduce((sum, w) => sum + w[selectedMetric], 0);
+    const avg = Math.round(total / weeklyData.length);
     const peak = Math.max(...weeklyData.map(w => w[selectedMetric]));
+    const peakWeek = weeklyData.find(w => w[selectedMetric] === peak);
 
     useEffect(() => {
-        if (!chartRef.current || weeklyData.length === 0) return;
+        if (!chartRef.current || !containerRef.current || weeklyData.length === 0) return;
 
         const svg = d3.select(chartRef.current);
         svg.selectAll("*").remove();
 
-        const width = containerRef.current?.clientWidth || 300;
-        const height = 140;
-        const margin = { top: 10, right: 10, bottom: 20, left: 30 };
+        const containerWidth = containerRef.current.clientWidth;
+        const width = containerWidth;
+        const height = 160;
+        const margin = { top: 15, right: 15, bottom: 25, left: 35 };
         const innerWidth = width - margin.left - margin.right;
         const innerHeight = height - margin.top - margin.bottom;
 
@@ -93,109 +97,144 @@ export const WeeklyTrends = ({ applicants }: WeeklyTrendsProps) => {
 
         const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-        const x = d3.scaleBand().domain(weeklyData.map(d => d.weekLabel)).range([0, innerWidth]).padding(0.2);
+        const x = d3.scaleBand().domain(weeklyData.map((_, i) => String(i))).range([0, innerWidth]).padding(0.15);
         const maxVal = Math.max(...weeklyData.map(d => d[selectedMetric]), 10);
-        const y = d3.scaleLinear().domain([0, maxVal * 1.1]).range([innerHeight, 0]);
+        const y = d3.scaleLinear().domain([0, maxVal * 1.15]).range([innerHeight, 0]);
 
-        // Grid
+        // Subtle grid
         g.append("g").selectAll("line").data(y.ticks(4)).enter()
             .append("line").attr("x1", 0).attr("x2", innerWidth)
             .attr("y1", d => y(d)).attr("y2", d => y(d))
-            .attr("stroke", theme.palette.divider).attr("stroke-dasharray", "2,2");
+            .attr("stroke", theme.palette.divider).attr("stroke-opacity", 0.5);
 
-        // X axis
-        g.append("g").attr("transform", `translate(0,${innerHeight})`)
-            .call(d3.axisBottom(x).tickSize(0)).selectAll("text")
-            .attr("fill", theme.palette.text.secondary).attr("font-size", 9);
-        g.select(".domain").remove();
+        // Average line
+        g.append("line")
+            .attr("x1", 0).attr("x2", innerWidth)
+            .attr("y1", y(avg)).attr("y2", y(avg))
+            .attr("stroke", currentMetric.color).attr("stroke-opacity", 0.4)
+            .attr("stroke-dasharray", "4,4").attr("stroke-width", 1.5);
 
-        // Y axis
-        g.append("g").call(d3.axisLeft(y).ticks(4).tickSize(0).tickFormat(d => String(d)))
-            .selectAll("text").attr("fill", theme.palette.text.secondary).attr("font-size", 9);
-        g.selectAll(".domain").remove();
+        // Bars with gradient effect
+        const barWidth = x.bandwidth();
+        weeklyData.forEach((d, i) => {
+            const barHeight = innerHeight - y(d[selectedMetric]);
+            const xPos = x(String(i)) || 0;
+            const isHovered = hoveredWeek?.weekLabel === d.weekLabel;
+            const isCurrent = i === weeklyData.length - 1;
 
-        if (chartType === 'bar') {
-            g.selectAll(".bar").data(weeklyData).enter().append("rect")
-                .attr("x", d => x(d.weekLabel) || 0).attr("y", d => y(d[selectedMetric]))
-                .attr("width", x.bandwidth()).attr("height", d => innerHeight - y(d[selectedMetric]))
-                .attr("fill", currentMetric.color).attr("rx", 3);
-        } else {
-            const line = d3.line<WeekPoint>()
-                .x(d => (x(d.weekLabel) || 0) + x.bandwidth() / 2)
-                .y(d => y(d[selectedMetric])).curve(d3.curveMonotoneX);
+            g.append("rect")
+                .attr("x", xPos)
+                .attr("y", y(d[selectedMetric]))
+                .attr("width", barWidth)
+                .attr("height", barHeight)
+                .attr("fill", currentMetric.color)
+                .attr("fill-opacity", isHovered ? 1 : isCurrent ? 0.9 : 0.6)
+                .attr("rx", 4)
+                .style("cursor", "pointer")
+                .on("mouseenter", () => setHoveredWeek(d))
+                .on("mouseleave", () => setHoveredWeek(null));
 
-            if (chartType === 'area') {
-                const area = d3.area<WeekPoint>()
-                    .x(d => (x(d.weekLabel) || 0) + x.bandwidth() / 2)
-                    .y0(innerHeight).y1(d => y(d[selectedMetric])).curve(d3.curveMonotoneX);
-                g.append("path").datum(weeklyData).attr("fill", currentMetric.color)
-                    .attr("fill-opacity", 0.15).attr("d", area);
+            // Value label on top of bar
+            if (d[selectedMetric] > 0) {
+                g.append("text")
+                    .attr("x", xPos + barWidth / 2)
+                    .attr("y", y(d[selectedMetric]) - 5)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", 10)
+                    .attr("font-weight", isHovered || isCurrent ? 600 : 400)
+                    .attr("fill", isHovered || isCurrent ? currentMetric.color : theme.palette.text.secondary)
+                    .text(d[selectedMetric]);
             }
+        });
 
-            g.append("path").datum(weeklyData).attr("fill", "none")
-                .attr("stroke", currentMetric.color).attr("stroke-width", 2).attr("d", line);
+        // X axis labels
+        g.append("g")
+            .attr("transform", `translate(0,${innerHeight + 8})`)
+            .selectAll("text")
+            .data(weeklyData)
+            .enter()
+            .append("text")
+            .attr("x", (_, i) => (x(String(i)) || 0) + barWidth / 2)
+            .attr("text-anchor", "middle")
+            .attr("font-size", 9)
+            .attr("fill", (d, i) => i === weeklyData.length - 1 ? currentMetric.color : theme.palette.text.disabled)
+            .attr("font-weight", (_, i) => i === weeklyData.length - 1 ? 600 : 400)
+            .text(d => d.weekLabel);
 
-            g.selectAll(".dot").data(weeklyData).enter().append("circle")
-                .attr("cx", d => (x(d.weekLabel) || 0) + x.bandwidth() / 2)
-                .attr("cy", d => y(d[selectedMetric])).attr("r", 4)
-                .attr("fill", theme.palette.background.paper)
-                .attr("stroke", currentMetric.color).attr("stroke-width", 2);
-        }
-    }, [weeklyData, chartType, selectedMetric, theme, currentMetric]);
+    }, [weeklyData, selectedMetric, theme, currentMetric, hoveredWeek, avg]);
 
     return (
         <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: 1, borderColor: 'divider', height: '100%', display: 'flex', flexDirection: 'column' }}>
-            {/* Header Row */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+            {/* Header */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Timeline sx={{ fontSize: 18, color: 'text.secondary' }} />
+                    <CalendarToday sx={{ fontSize: 18, color: 'text.secondary' }} />
                     <Typography variant="subtitle2" fontWeight="bold">Weekly Trends</Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 1 }}>
-                        {trend >= 0 ? <TrendingUp sx={{ fontSize: 14, color: 'success.main' }} /> : <TrendingDown sx={{ fontSize: 14, color: 'error.main' }} />}
-                        <Typography variant="caption" sx={{ color: trend >= 0 ? 'success.main' : 'error.main', fontWeight: 500 }}>
-                            {trend > 0 ? '+' : ''}{trend}%
-                        </Typography>
-                    </Box>
                 </Box>
-                <ToggleButtonGroup value={chartType} exclusive onChange={(_, val) => val && setChartType(val)} size="small" sx={{ '& .MuiToggleButton-root': { p: 0.5 } }}>
-                    <ToggleButton value="area"><ShowChart sx={{ fontSize: 14 }} /></ToggleButton>
-                    <ToggleButton value="line"><Timeline sx={{ fontSize: 14 }} /></ToggleButton>
-                    <ToggleButton value="bar"><BarChart sx={{ fontSize: 14 }} /></ToggleButton>
-                </ToggleButtonGroup>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1, py: 0.25, borderRadius: 1, bgcolor: trend >= 0 ? 'success.main' : 'error.main', color: 'white' }}>
+                    {trend >= 0 ? <TrendingUp sx={{ fontSize: 14 }} /> : <TrendingDown sx={{ fontSize: 14 }} />}
+                    <Typography variant="caption" fontWeight="bold">{trend > 0 ? '+' : ''}{trend}%</Typography>
+                </Box>
             </Box>
 
-            {/* Metric Selector + Stats Row */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, gap: 1 }}>
-                <Box sx={{ display: 'flex', gap: 0.5 }}>
-                    {metrics.map(m => (
-                        <Box key={m.key} onClick={() => setSelectedMetric(m.key)} sx={{
-                            px: 1, py: 0.25, borderRadius: 1, cursor: 'pointer', fontSize: 11, fontWeight: 500,
-                            bgcolor: selectedMetric === m.key ? m.color : 'action.hover',
-                            color: selectedMetric === m.key ? 'white' : 'text.secondary'
-                        }}>
-                            {m.abbr}
-                        </Box>
-                    ))}
-                </Box>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="body2" fontWeight="bold" color={currentMetric.color}>{thisWeek}</Typography>
-                        <Typography variant="caption" color="text.disabled" sx={{ fontSize: 9 }}>This Week</Typography>
-                    </Box>
-                    <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="body2" fontWeight="bold">{avg}</Typography>
-                        <Typography variant="caption" color="text.disabled" sx={{ fontSize: 9 }}>Avg</Typography>
-                    </Box>
-                    <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="body2" fontWeight="bold">{peak}</Typography>
-                        <Typography variant="caption" color="text.disabled" sx={{ fontSize: 9 }}>Peak</Typography>
-                    </Box>
-                </Box>
+            {/* Metric Chips */}
+            <Box sx={{ display: 'flex', gap: 0.75, mb: 1.5, flexWrap: 'wrap' }}>
+                {metrics.map(m => (
+                    <Chip
+                        key={m.key}
+                        label={m.label}
+                        size="small"
+                        onClick={() => setSelectedMetric(m.key)}
+                        sx={{
+                            height: 24,
+                            fontSize: 11,
+                            fontWeight: selectedMetric === m.key ? 600 : 400,
+                            bgcolor: selectedMetric === m.key ? m.color : 'transparent',
+                            color: selectedMetric === m.key ? 'white' : 'text.secondary',
+                            border: 1,
+                            borderColor: selectedMetric === m.key ? m.color : 'divider',
+                            '&:hover': { bgcolor: selectedMetric === m.key ? m.color : 'action.hover' }
+                        }}
+                    />
+                ))}
             </Box>
 
             {/* Chart */}
-            <Box ref={containerRef} sx={{ flex: 1, minHeight: 140 }}>
+            <Box ref={containerRef} sx={{ flex: 1, minHeight: 160, position: 'relative' }}>
                 <svg ref={chartRef} style={{ width: '100%', height: '100%' }} />
+
+                {/* Hover tooltip */}
+                {hoveredWeek && (
+                    <Box sx={{
+                        position: 'absolute', top: 0, right: 0,
+                        bgcolor: 'background.paper', border: 1, borderColor: 'divider',
+                        borderRadius: 1.5, p: 1, boxShadow: 2, minWidth: 100
+                    }}>
+                        <Typography variant="caption" color="text.secondary" display="block">{hoveredWeek.dateLabel}</Typography>
+                        <Typography variant="body2" fontWeight="bold" sx={{ color: currentMetric.color }}>
+                            {hoveredWeek[selectedMetric]} {currentMetric.label}
+                        </Typography>
+                    </Box>
+                )}
+            </Box>
+
+            {/* Stats footer */}
+            <Divider sx={{ my: 1.5 }} />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Box sx={{ textAlign: 'center', flex: 1 }}>
+                    <Typography variant="h6" fontWeight="bold" sx={{ color: currentMetric.color, lineHeight: 1 }}>{thisWeek}</Typography>
+                    <Typography variant="caption" color="text.disabled">This Week</Typography>
+                </Box>
+                <Divider orientation="vertical" flexItem />
+                <Box sx={{ textAlign: 'center', flex: 1 }}>
+                    <Typography variant="h6" fontWeight="bold" lineHeight={1}>{total}</Typography>
+                    <Typography variant="caption" color="text.disabled">8-Week Total</Typography>
+                </Box>
+                <Divider orientation="vertical" flexItem />
+                <Box sx={{ textAlign: 'center', flex: 1 }}>
+                    <Typography variant="h6" fontWeight="bold" lineHeight={1}>{avg}</Typography>
+                    <Typography variant="caption" color="text.disabled">Weekly Avg</Typography>
+                </Box>
             </Box>
         </Paper>
     );
