@@ -136,11 +136,11 @@ export const AnalyticsDashboard = ({ applicants: propApplicants }: AnalyticsDash
             </Box>
 
             {/* Row 2: Trend Chart and Funnel */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3 }}>
-                <Box sx={{ flex: '2 1 400px', minWidth: 0 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3, alignItems: 'stretch' }}>
+                <Box sx={{ flex: '2 1 400px', minWidth: 0, display: 'flex' }}>
                     <ApplicationTrendChart data={trendData} />
                 </Box>
-                <Box sx={{ flex: '1 1 280px', minWidth: 280 }}>
+                <Box sx={{ flex: '1 1 280px', minWidth: 280, display: 'flex' }}>
                     <RecruitmentFunnel
                         data={funnelCounts}
                         onStageClick={handleStageClick}

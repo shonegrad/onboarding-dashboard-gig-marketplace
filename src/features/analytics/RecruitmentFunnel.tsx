@@ -51,10 +51,13 @@ export const RecruitmentFunnel = ({ data, onStageClick, selectedStage }: Recruit
                 p: 3,
                 borderRadius: 3,
                 height: '100%',
+                width: '100%',
                 border: 1,
                 borderColor: 'divider',
                 transition: 'all 0.3s ease',
-                '&:hover': { boxShadow: 6 }
+                '&:hover': { boxShadow: 6 },
+                display: 'flex',
+                flexDirection: 'column'
             }}
         >
             {/* Header */}

@@ -250,7 +250,11 @@ export const ApplicationTrendChart = ({ data }: ApplicationTrendChartProps) => {
                 borderColor: 'divider',
                 overflow: 'hidden',
                 transition: 'all 0.3s ease',
-                '&:hover': { boxShadow: 6 }
+                '&:hover': { boxShadow: 6 },
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column'
             }}
         >
             {/* Header */}
@@ -309,7 +313,7 @@ export const ApplicationTrendChart = ({ data }: ApplicationTrendChartProps) => {
             </Box>
 
             {/* Chart */}
-            <Box ref={containerRef} sx={{ p: 2, pt: 1, position: 'relative' }}>
+            <Box ref={containerRef} sx={{ p: 2, pt: 1, position: 'relative', flex: 1, minHeight: 0 }}>
                 <svg ref={svgRef}></svg>
 
                 {/* Tooltip */}
