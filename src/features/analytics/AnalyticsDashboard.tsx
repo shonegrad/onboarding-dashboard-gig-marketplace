@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Box, Typography, Paper, LinearProgress } from '@mui/material';
-import { Work, TrendingUp, TrendingDown, People, Speed, Timeline, CalendarMonth, CheckCircle, Cancel } from '@mui/icons-material';
+import { TrendingUp, TrendingDown, People, Speed, Timeline, CalendarMonth, CheckCircle, Cancel, Work } from '@mui/icons-material';
 import { generateMockApplicants } from '../../data/mockData';
 import { useAnalyticsData } from './useAnalyticsData';
 import { GeographicMap } from './GeographicMap';
@@ -25,9 +25,6 @@ interface AnalyticsDashboardProps {
     filters?: FilterState;
     onFilterChange?: (filters: Partial<FilterState>) => void;
 }
-
-// Standard card height for consistency
-const CARD_HEIGHT = 380;
 
 export const AnalyticsDashboard = ({
     applicants: propApplicants,
@@ -115,12 +112,18 @@ export const AnalyticsDashboard = ({
         }
     };
 
-    // Common card wrapper style
-    const cardStyle = {
-        height: CARD_HEIGHT,
+    // Row style - cards in same row match height (stretch)
+    const rowStyle = {
+        display: 'grid',
+        gap: 3,
+        mb: 3,
+        alignItems: 'stretch'
+    };
+
+    // Card wrapper - fills height of row
+    const cardWrapper = {
         display: 'flex',
-        flexDirection: 'column' as const,
-        overflow: 'hidden'
+        '& > *': { flex: 1, width: '100%' }
     };
 
     return (
@@ -247,73 +250,66 @@ export const AnalyticsDashboard = ({
                 </Box>
             </Paper>
 
-            {/* All cards in 50/50 grid with uniform height */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' }, gap: 3 }}>
-                {/* Card 1: Geographic Map */}
-                <Box sx={cardStyle}>
+            {/* Row 1: Map + Regional (2 columns) */}
+            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' } }}>
+                <Box sx={cardWrapper}>
                     <GeographicMap
                         data={mapData}
                         selectedCountry={selectedCountry}
                         onCountryClick={handleCountryClick}
                     />
                 </Box>
-
-                {/* Card 2: Regional Comparison */}
-                <Box sx={cardStyle}>
+                <Box sx={cardWrapper}>
                     <RegionalComparison applicants={applicants} onCountryClick={handleCountryClick} />
                 </Box>
+            </Box>
 
-                {/* Card 3: Recruitment Funnel */}
-                <Box sx={cardStyle}>
+            {/* Row 2: Funnel + Pipeline (2 columns) */}
+            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' } }}>
+                <Box sx={cardWrapper}>
                     <RecruitmentFunnel
                         data={funnelCounts}
                         onStageClick={handleStageClick}
                         selectedStage={selectedStage}
                     />
                 </Box>
-
-                {/* Card 4: Pipeline Health */}
-                <Box sx={cardStyle}>
+                <Box sx={cardWrapper}>
                     <PipelineHealth applicants={applicants} onStageClick={handleStageClick} />
                 </Box>
+            </Box>
 
-                {/* Card 5: Application Trend */}
-                <Box sx={cardStyle}>
+            {/* Row 3: Trends (2 columns) */}
+            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' } }}>
+                <Box sx={cardWrapper}>
                     <ApplicationTrendChart data={trendData} />
                 </Box>
-
-                {/* Card 6: Weekly Trends */}
-                <Box sx={cardStyle}>
+                <Box sx={cardWrapper}>
                     <WeeklyTrends applicants={applicants} />
                 </Box>
+            </Box>
 
-                {/* Card 7: Time to Hire */}
-                <Box sx={cardStyle}>
+            {/* Row 4: Time to Hire, Experience, Rating, Skills (4 columns - same row, same height) */}
+            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' } }}>
+                <Box sx={cardWrapper}>
                     <TimeToHireChart applicants={applicants} />
                 </Box>
-
-                {/* Card 8: Experience Breakdown */}
-                <Box sx={cardStyle}>
+                <Box sx={cardWrapper}>
                     <ExperienceBreakdown applicants={applicants} />
                 </Box>
-
-                {/* Card 9: Rating Distribution */}
-                <Box sx={cardStyle}>
+                <Box sx={cardWrapper}>
                     <RatingDistribution applicants={applicants} />
                 </Box>
-
-                {/* Card 10: Skills & Certifications */}
-                <Box sx={cardStyle}>
+                <Box sx={cardWrapper}>
                     <SkillsCertifications applicants={applicants} />
                 </Box>
+            </Box>
 
-                {/* Card 11: Application Source */}
-                <Box sx={cardStyle}>
+            {/* Row 5: Source + Activity (2 columns) */}
+            <Box sx={{ ...rowStyle, gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' }, mb: 0 }}>
+                <Box sx={cardWrapper}>
                     <ApplicationSource applicants={applicants} />
                 </Box>
-
-                {/* Card 12: Recent Activity */}
-                <Box sx={cardStyle}>
+                <Box sx={cardWrapper}>
                     <RecentActivity applicants={allApplicants} limit={8} />
                 </Box>
             </Box>
